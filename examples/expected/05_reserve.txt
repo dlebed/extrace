@@ -1,0 +1,24 @@
+05_reserve: zero-copy records
+  == ring 1 "app" attached, epoch 1006
+           -  INFO          sys     image description, 22 bytes
+        0 us  SYNC          sys     time anchor
+
+-- fill an array of descriptors in place
+       20 us  DMA_DESC      BUF     [36 bytes] 00 00 00 20 00 30 01 40 40 00 01 00 ...
+     (1 record, 41 bytes in the ring)
+
+-- EXTRACE_RESERVE_STRUCT: the size and alignment of the catalog type
+       45 us  MOTOR         STRUCT  {rpm=1200 current=80 mA phase=1 fault=0 revs=42}
+     (1 record, 24 bytes in the ring)
+
+-- cancel: decide after reserving; the space becomes a skipped record
+       75 us  WARN          PRINTF  "dropped a frame with a bad CRC"  @05_reserve.c:79
+     (1 record, 25 bytes in the ring)
+
+-- records committed while a reservation is open wait for it
+     (nothing published)
+      100 us  PKT_DUMP      BUF     [4 bytes] de ad be ef
+      105 us  RX_PKT        INTS    len=60 port=1
+     (2 records, 15 bytes in the ring)
+
+producer: 8 records, 0 lost, high-water mark 136 of 4096 bytes

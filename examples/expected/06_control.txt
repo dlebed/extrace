@@ -1,0 +1,29 @@
+06_control: compile-time groups, runtime switches, guards
+  == ring 1 "app" attached, epoch 1006
+           -  INFO          sys     image description, 22 bytes
+        0 us  SYNC          sys     time anchor
+
+-- compile time: the VERBOSE group is not built
+       20 us  LOG           PRINTF  "checksum() called 0 times"  @06_control.c:50
+     (1 record, 6 bytes in the ring)
+
+-- EXTRACE_ON guards work that only feeds the trace
+       45 us  LOG           PRINTF  "blob: 256 bytes, sum 0x60000000"  @06_control.c:57
+       50 us  LOG           PRINTF  "checksum() called 1 times"  @06_control.c:61
+     (2 records, 18 bytes in the ring)
+
+-- the consumer switches HEAP on and RX_PKT off; the producer applies at poll
+       75 us  CFG           sys     event mask generation 6 applied
+       85 us  HEAP          INTS    used=12288 free=4096 largest=2048
+     (2 records, 16 bytes in the ring)
+
+-- back to the catalog defaults
+      110 us  CFG           sys     event mask generation 8 applied
+      120 us  RX_PKT        INTS    len=60 port=1
+     (2 records, 12 bytes in the ring)
+
+-- runtime IDs: the event is data; the mask still applies
+      145 us  REG_WR        INTS    addr=0x40021018 val=0x4
+     (1 record, 11 bytes in the ring)
+
+producer: 10 records, 0 lost, high-water mark 55 of 4096 bytes

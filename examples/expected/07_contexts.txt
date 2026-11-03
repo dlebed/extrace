@@ -1,0 +1,45 @@
+07_contexts: ISRs, publication, overflow, re-init, panic
+  == ring 1 "app" attached, epoch 1006
+           -  INFO          sys     image description, 22 bytes
+        0 us  SYNC          sys     time anchor
+
+-- an interrupt arrives between two thread records
+       20 us  LOG           PRINTF  "tx start"  @07_contexts.c:40
+       25 us  IRQ           INTS    seq=1 line=37
+       30 us  LOG           PRINTF  "tx end"  @07_contexts.c:42
+     (3 records, 17 bytes in the ring)
+
+-- publication: committed records wait for publish_thr, a poll or a flush
+     (nothing published)
+       55 us  RX_PKT        INTS    len=60 port=1
+       70 us  CFG           sys     event mask generation 2 applied
+     (2 records, 12 bytes in the ring)
+      100 us  IDLE          NONE
+     (1 record, 3 bytes in the ring)
+
+-- the doorbell: the consumer asks for one per 256 bytes
+     2 doorbells for 100 records
+     (100 records, 732 bytes in the ring)
+
+-- overflow: the consumer stalls, the producer drops and counts
+     producer: 622 lost so far, ring high-water mark 4093 bytes
+     (378 records, 4093 bytes in the ring)
+     8800 us  LOST          sys     622 records dropped (ring full)
+     8800 us  LOG           PRINTF  "back to normal"  @07_contexts.c:71
+     (2 records, 13 bytes in the ring)
+
+-- re-init: a new epoch; the consumer re-attaches by itself
+  == ring 1 detached from epoch 1006 (producer re-initialized)
+  == ring 1 "app" attached, epoch 1007
+           -  INFO          sys     image description, 22 bytes
+     8835 us  SYNC          sys     time anchor
+           -  BOOT          MARK
+     (3 records, 33 bytes in the ring)
+
+-- panic: publish what is committed, seal the ring
+     8865 us  WARN          PRINTF  "bus fault at 0x40080000"  @07_contexts.c:80
+     8870 us  PANIC         sys     reason=0xbad pc=0x8001234
+     (2 records, 20 bytes in the ring)
+     consumer sees status PANIC
+
+producer: 5 records, 0 lost, high-water mark 33 of 4096 bytes

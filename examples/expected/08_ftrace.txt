@@ -1,0 +1,17 @@
+08_ftrace: function entry tracing
+  == ring 1 "app" attached, epoch 1006
+           -  INFO          sys     image description, 22 bytes
+        0 us  SYNC          sys     time anchor
+
+-- four functions, four flavors: MARK, NONE, ARGS(2), ARGS(2) | CALLER
+       20 us  FTRACE        NONE    sched_tick
+       25 us  FTRACE_CALLER INTS    spi_xfer from app_task (0x2, 0x10)
+       30 us  FTRACE        INTS    crc16 (0x20003000, 0x10)
+           -  FTRACE        MARK    idle_hook
+     (4 records, 39 bytes in the ring)
+
+-- the consumer turns the FTRACE switch off: patched functions cost a test
+       55 us  CFG           sys     event mask generation 4 applied
+     (1 record, 5 bytes in the ring)
+
+producer: 7 records, 0 lost, high-water mark 70 of 4096 bytes

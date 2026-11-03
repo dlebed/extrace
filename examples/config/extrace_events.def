@@ -1,0 +1,35 @@
+/* SPDX-License-Identifier: MIT */
+/*
+ * extrace_events.def - event catalog of the example image.
+ *
+ * Event IDs are assigned in catalog order from 16. Each macro checks at compile
+ * time that it is used with its event's kind; ANY accepts every kind.
+ */
+
+/*            group     compiled-in */
+EXTRACE_GROUP(APP,      1)
+EXTRACE_GROUP(NET,      1)
+EXTRACE_GROUP(DRV,      1)
+EXTRACE_GROUP(VERBOSE,  0)  /* compiled out: -DEXTRACE_GRP_VERBOSE_ON=1 brings it back */
+
+/*         name         kind     default  group    spec: field names and display hints */
+EXTRACE_EV(BOOT,        MARK,    ON,      APP,     "")
+EXTRACE_EV(IDLE,        NONE,    ON,      APP,     "")
+EXTRACE_EV(LOG,         PRINTF,  ON,      APP,     "")
+EXTRACE_EV(WARN,        PRINTF,  ON,      APP,     "")
+EXTRACE_EV(CONSOLE,     STR,     ON,      APP,     "")
+EXTRACE_EV(HEAP,        INTS,    OFF,     APP,     "used:u free:u largest:u")
+EXTRACE_EV(RX_PKT,      INTS,    ON,      NET,     "len:u port:u")
+EXTRACE_EV(TX_DONE,     INTS,    ON,      NET,     "len:u status:s")
+EXTRACE_EV(PKT_DUMP,    BUF,     ON,      NET,     "")
+EXTRACE_EV(SENSOR,      INTS,    ON,      DRV,     "ch:u raw:x mC:s")
+EXTRACE_EV(ADC_BLOCK,   INTS,    ON,      DRV,     "")
+EXTRACE_EV(UPTIME,      INTS,    ON,      DRV,     "us:u")
+EXTRACE_EV(FW_CHUNK,    BUF,     ON,      DRV,     "")
+EXTRACE_EV(DMA_DESC,    BUF,     ON,      DRV,     "")
+EXTRACE_EV(IRQ,         INTS,    ON,      DRV,     "seq:u line:u")
+EXTRACE_EV(REG_WR,      ANY,     ON,      DRV,     "addr:x val:x")
+EXTRACE_EV(REG_DUMP,    BUF,     ON,      VERBOSE, "")
+
+/*                name    default  group  C type (extrace_events_types.h) */
+EXTRACE_EV_STRUCT(MOTOR,  ON,      DRV,   struct motor_state)

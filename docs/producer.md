@@ -2,7 +2,8 @@
 
 The producer is the traced image: firmware on a core that writes trace records
 into a shared-memory ring. This guide covers how to integrate it and the API it
-exposes. [wire-format.md](wire-format.md) shows the bytes each macro writes. [DESIGN.md](../DESIGN.md) has the full specification. Section numbers
+exposes. [examples/](../examples) has a runnable program for each feature, and
+[wire-format.md](wire-format.md) shows the bytes each macro writes. [DESIGN.md](../DESIGN.md) has the full specification. Section numbers
 (§) below refer to it.
 
 ## How it works

@@ -1,0 +1,34 @@
+03_printf: deferred formatting, any argument types
+  == ring 1 "app" attached, epoch 1006
+           -  INFO          sys     image description, 22 bytes
+        0 us  SYNC          sys     time anchor
+
+-- no arguments, then 1-3 integers: the register emitters
+       20 us  LOG           PRINTF  "scheduler started"  @03_printf.c:31
+       25 us  LOG           PRINTF  "task 4 ready"  @03_printf.c:32
+       30 us  LOG           PRINTF  "task 5 prio -2 stack 0x400"  @03_printf.c:33
+     (3 records, 20 bytes in the ring)
+
+-- every argument class in one call
+       55 us  LOG           PRINTF  "ofs=-1234567890123 ns tx=5000000000 B v=3.30 r=0.6180 ssid=lab-net p=0x20001000"  @03_printf.c:44
+     (1 record, 41 bytes in the ring)
+
+-- strings: copied (up to 64 bytes) or, for constants, logged by address
+       80 us  LOG           PRINTF  "copied: ONLINE"  @03_printf.c:49
+       85 us  LOG           PRINTF  "by address: ONLINE"  @03_printf.c:50
+       90 us  LOG           PRINTF  "long: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"  @03_printf.c:53
+     (3 records, 94 bytes in the ring)
+
+-- width, precision and flags are applied on the host
+      115 us  WARN          PRINTF  "[temp  ] 0036.600 +42     x|"  @03_printf.c:57
+     (1 record, 21 bytes in the ring)
+
+-- up to 16 arguments
+      140 us  LOG           PRINTF  "1 -2 3 -4 5 -6 7 -8 9 -10 11 -12 13 -14 15 -16"  @03_printf.c:62
+     (1 record, 21 bytes in the ring)
+
+-- EXTRACE_TEXT: formatted on the device instead, into a STR record
+      165 us  CONSOLE       STR     "fw 1.4.2 (release)"
+     (1 record, 22 bytes in the ring)
+
+producer: 12 records, 0 lost, high-water mark 250 of 4096 bytes

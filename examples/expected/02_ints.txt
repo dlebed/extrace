@@ -1,0 +1,35 @@
+02_ints: variadic integer records
+  == ring 1 "app" attached, epoch 1006
+           -  INFO          sys     image description, 22 bytes
+        0 us  SYNC          sys     time anchor
+
+-- 1 to 3 arguments: register emitters, no array on the stack
+       20 us  UPTIME        INTS    us=123456
+       25 us  RX_PKT        INTS    len=60 port=7
+       30 us  SENSOR        INTS    ch=3 raw=0xbeef mC=-1250
+     (3 records, 26 bytes in the ring)
+
+-- any integer type: the C type sets the sign, the value sets the size
+       55 us  ADC_BLOCK     INTS    -128 65535 65 1 -7 16
+     (1 record, 15 bytes in the ring)
+
+-- 64-bit arguments select the 64-bit emitter automatically
+       80 us  UPTIME        INTS    us=1099511627776
+       85 us  ADC_BLOCK     INTS    -9223372036854775808 18446744073709551615 0
+     (2 records, 37 bytes in the ring)
+
+-- 4 to 16 arguments: one call, the values go through a compound literal
+      110 us  ADC_BLOCK     INTS    -2400 -2100 -1800 -1500
+      115 us  ADC_BLOCK     INTS    -2400 -2100 -1800 -1500 -1200 -900 -600 -300 0 300 600 900 1200 1500 1800 2100
+     (2 records, 51 bytes in the ring)
+
+-- arguments are evaluated once, and only when the event is enabled
+      140 us  RX_PKT        INTS    len=100 port=1
+      145 us  UPTIME        INTS    us=1
+     (2 records, 13 bytes in the ring)
+
+-- _URGENT: publish right after the commit, even from an ISR
+      170 us  TX_DONE       INTS    len=64 status=0
+     (1 record, 7 bytes in the ring)
+
+producer: 13 records, 0 lost, high-water mark 180 of 4096 bytes

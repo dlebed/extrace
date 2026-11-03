@@ -1,0 +1,32 @@
+04_payloads: strings, buffers and structs
+  == ring 1 "app" attached, epoch 1006
+           -  INFO          sys     image description, 22 bytes
+        0 us  SYNC          sys     time anchor
+
+-- EXTRACE_STR
+       20 us  CONSOLE       STR     "AT+CWJAP="lab-net""
+     (1 record, 22 bytes in the ring)
+
+-- EXTRACE_BUF: a 42-byte header, then a frame cut to MAX_PAYLOAD (512)
+       45 us  PKT_DUMP      BUF     [42 bytes] 00 01 02 03 04 05 06 07 08 09 0a 0b ...
+       50 us  PKT_DUMP      BUF     [512 bytes] 00 01 02 03 04 05 06 07 08 09 0a 0b ...
+     (2 records, 563 bytes in the ring)
+
+-- EXTRACE_BUF_LARGE: 1500 bytes as fragments, other records may interleave
+       75 us  FRAG          sys     FW_CHUNK xfer 1: bytes 0..505 of 1500
+       80 us  FRAG          sys     FW_CHUNK xfer 1: bytes 506..1010 of 1500
+       85 us  FRAG          sys     FW_CHUNK xfer 1: bytes 1011..1499 of 1500, complete
+     (3 records, 1532 bytes in the ring)
+
+-- EXTRACE_STRUCT: type-checked against the catalog's struct motor_state
+      110 us  MOTOR         STRUCT  {rpm=2400 current=-350 mA phase=2 fault=0 revs=123456789}
+      115 us  MOTOR         STRUCT  {rpm=2400 current=-350 mA phase=2} first 7 bytes
+      120 us  MOTOR         STRUCT  {rpm=2400 current=-350 mA phase=2 fault=3 revs=123456789}
+     (3 records, 51 bytes in the ring)
+
+-- an ANY event takes whichever macro fits the call site
+      145 us  REG_WR        INTS    addr=0x40021000 val=0x81
+      150 us  REG_WR        BUF     [8 bytes] 00 10 02 40 81 00 00 00
+     (2 records, 24 bytes in the ring)
+
+producer: 13 records, 0 lost, high-water mark 2223 of 4096 bytes

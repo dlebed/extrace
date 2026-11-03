@@ -1,0 +1,21 @@
+01_quickstart: init, the basic macros, poll
+  == ring 1 "app" attached, epoch 1006
+           -  INFO          sys     image description, 22 bytes
+        0 us  SYNC          sys     time anchor
+
+-- lifecycle: init writes INFO and SYNC, then the image traces
+           -  BOOT          MARK
+       20 us  IDLE          NONE
+       25 us  RX_PKT        INTS    len=64 port=0
+       30 us  RX_PKT        INTS    len=164 port=1
+       35 us  RX_PKT        INTS    len=264 port=2
+       40 us  LOG           PRINTF  "link up: 1000 Mbit/s, full duplex"  @01_quickstart.c:31
+       45 us  CONSOLE       STR     "hello from the producer"
+       50 us  CFG           sys     event mask generation 2 applied
+     (8 records, 72 bytes in the ring)
+
+-- signedness comes from the argument types
+       80 us  TX_DONE       INTS    len=1500 status=-110
+     (1 record, 9 bytes in the ring)
+
+producer: 11 records, 0 lost, high-water mark 81 of 4096 bytes
