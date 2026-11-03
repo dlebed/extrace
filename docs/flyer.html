@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>extrace: embedded tracing</title>
+<meta name="description" content="extrace: a C23 tracing library for heterogeneous multi-core SoCs with non-coherent shared memory, with per-function entry tracing on ARMv7-M and RV32.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f5f1;
+  --surface: #fcfcfb;
+  --surface-2: #efeee9;
+  --line: #e2e0d9;
+  --grid: #e6e4de;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-3: #74736d;
+  --accent: #2a78d6;
+  --accent-ink: #1c5cab;
+  --s1: #2a78d6;          /* RV32 */
+  --s2: #eb6834;          /* Cortex-M4 */
+  --free: #dedcd4;        /* free ring slot in the logo */
+  --code-bg: #15161a;
+  --code-ink: #e9e7e1;
+  --code-dim: #8d8b84;
+  --code-key: #86b6ef;
+  --code-str: #f0a879;
+  --shadow: 0 1px 2px rgba(20, 20, 18, .05), 0 8px 24px rgba(20, 20, 18, .06);
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121211;
+    --surface: #1a1a19;
+    --surface-2: #232321;
+    --line: #2f2f2c;
+    --grid: #2c2c2a;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --ink-3: #9a998f;
+    --accent: #3987e5;
+    --accent-ink: #86b6ef;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --free: #3a3a37;
+    --code-bg: #0d0d0c;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211;
+  --surface: #1a1a19;
+  --surface-2: #232321;
+  --line: #2f2f2c;
+  --grid: #2c2c2a;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --ink-3: #9a998f;
+  --accent: #3987e5;
+  --accent-ink: #86b6ef;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --free: #3a3a37;
+  --code-bg: #0d0d0c;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.6 var(--sans);
+  overflow-x: hidden;
+}
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+code, pre { font-family: var(--mono); }
+p code, li code, td code { font-size: .88em; background: var(--surface-2); padding: .08em .35em; border-radius: 4px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 720px) { .wrap { padding: 0 32px; } }
+
+/* hero */
+header.hero { padding: 56px 0 40px; border-bottom: 1px solid var(--line); }
+.eyebrow { font: 500 13px/1 var(--mono); letter-spacing: .04em; color: var(--ink-3); text-transform: uppercase; }
+h1 { font-size: clamp(40px, 8vw, 72px); line-height: 1.02; letter-spacing: -.035em; margin: 14px 0 18px; font-weight: 700; }
+h1 .x { color: var(--accent); }
+/* logo: the ring mark, a steady stream of records (docs/img/gen_svg.py has the geometry) */
+h1.brand { display: flex; align-items: center; gap: .2em; }
+h1.brand .word { padding-bottom: .08em; }
+.mark { width: 1.1em; height: 1.1em; flex: none; }
+.mark circle { fill: none; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 5.78 132.45; stroke: var(--free); }
+.mark .rec { stroke: var(--s1); }
+.mark .new { stroke: var(--s2); }
+@keyframes slot { 0% { stroke: var(--s2); } 12.5% { stroke: var(--s1); } 62.5% { stroke: var(--free); } 100% { stroke: var(--free); } }
+.mark circle { animation: slot 4s step-end infinite; }
+@media (prefers-reduced-motion: reduce) { .mark circle { animation: none; } }
+.lede { font-size: clamp(18px, 2.4vw, 21px); color: var(--ink-2); max-width: 720px; margin: 0 0 28px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.chips li { font: 500 13px/1 var(--mono); padding: 8px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink-2); }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; padding: 11px 18px; border-radius: 10px; text-decoration: none; border: 1px solid var(--line); color: var(--ink); background: var(--surface); }
+.btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+section { padding: 56px 0; border-bottom: 1px solid var(--line); }
+h2 { font-size: clamp(26px, 4vw, 34px); letter-spacing: -.02em; line-height: 1.15; margin: 0 0 10px; }
+.sub { color: var(--ink-2); max-width: 760px; margin: 0 0 28px; }
+
+/* feature grid */
+.grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .grid.two { grid-template-columns: 1fr 1fr; } .grid.three { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 960px) { .grid.three { grid-template-columns: 1fr 1fr 1fr; } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; box-shadow: var(--shadow); min-width: 0; }
+.card h3 { margin: 0 0 6px; font-size: 17px; letter-spacing: -.01em; }
+.card p { margin: 0; color: var(--ink-2); font-size: 15px; }
+.card .k { font: 500 12px/1 var(--mono); color: var(--ink-3); margin-bottom: 10px; display: block; }
+
+/* tables */
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-weight: 600; color: var(--ink-2); font-size: 12.5px; text-transform: uppercase; letter-spacing: .03em; background: var(--surface-2); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.bytes { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+
+/* code */
+pre { margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 12px; padding: 16px 18px; overflow-x: auto; font-size: 13.5px; line-height: 1.55; }
+pre .c { color: var(--code-dim); }
+pre .k { color: var(--code-key); }
+pre .s { color: var(--code-str); }
+.code-title { font: 500 12px/1 var(--mono); color: var(--ink-3); margin: 0 0 8px; }
+
+/* hex record strip */
+.rec { display: flex; flex-wrap: wrap; gap: 6px; font: 500 13px/1 var(--mono); margin: 12px 0 4px; }
+.rec span { padding: 7px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); }
+.rec span b { display: block; font: 500 10px/1 var(--sans); color: var(--ink-3); margin-top: 5px; text-transform: uppercase; letter-spacing: .04em; }
+
+/* stat tiles */
+.tiles { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; margin-bottom: 24px; }
+@media (min-width: 860px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; min-width: 0; }
+.tile .lbl { font-size: 13px; color: var(--ink-2); line-height: 1.35; }
+.tile .val { font-size: clamp(28px, 4.5vw, 36px); font-weight: 600; letter-spacing: -.02em; line-height: 1.1; margin: 8px 0 4px; }
+.tile .val small { font-size: 15px; font-weight: 500; color: var(--ink-2); letter-spacing: 0; }
+.tile .note { font-size: 12.5px; color: var(--ink-3); line-height: 1.4; }
+
+/* charts */
+figure.chart { margin: 0 0 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 14px; box-shadow: var(--shadow); min-width: 0; }
+figure.chart h3 { margin: 0; font-size: 17px; }
+figure.chart .cap { color: var(--ink-2); font-size: 14px; margin: 4px 0 12px; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.plot { position: relative; width: 100%; }
+.plot svg { display: block; width: 100%; height: auto; overflow: visible; }
+.plot svg text { font-family: var(--sans); }
+.plot .bar { cursor: default; }
+.plot .bar { pointer-events: none; }
+.plot .hit:focus { outline: none; }
+.plot .bar.on { filter: brightness(1.15); }
+@media (max-width: 560px) {
+  table.ft thead { display: none; }
+  table.ft tr { display: block; border-bottom: 1px solid var(--line); padding: 8px 0; }
+  table.ft tr:last-child { border-bottom: 0; }
+  table.ft td { display: block; border: 0; padding: 3px 14px; }
+}
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.35; opacity: 0; transition: opacity .1s; z-index: 2; min-width: 150px; }
+.tip.show { opacity: 1; }
+.tip .v { font-weight: 600; font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tip .n { color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+.tip .n i { width: 12px; height: 2px; border-radius: 1px; display: inline-block; }
+.tip .t { color: var(--ink-3); font-size: 12px; margin-bottom: 4px; }
+.tview { margin-top: 8px; }
+.tview summary { cursor: pointer; font-size: 13px; color: var(--ink-2); padding: 4px 0; }
+.tview .tbl-wrap { margin-top: 8px; }
+.env { font-size: 13.5px; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.env dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 0 0 10px; }
+.env dt { color: var(--ink-3); }
+.env dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.env p { margin: 0; }
+
+footer { padding: 36px 0 56px; color: var(--ink-3); font-size: 14px; }
+.theme-toggle { position: fixed; right: 14px; bottom: 14px; z-index: 5; font: 500 13px/1 var(--sans); padding: 9px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); box-shadow: var(--shadow); cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">embedded eXecution trace &middot; C23 &middot; MIT</div>
+    <h1 class="brand"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <circle class="rec" cx="32" cy="32" r="22" transform="rotate(-75 32 32)" style="animation-delay: -4s"></circle>
+        <circle class="rec" cx="32" cy="32" r="22" transform="rotate(-30 32 32)" style="animation-delay: -3.5s"></circle>
+        <circle class="rec" cx="32" cy="32" r="22" transform="rotate(15 32 32)" style="animation-delay: -3s"></circle>
+        <circle class="rec" cx="32" cy="32" r="22" transform="rotate(60 32 32)" style="animation-delay: -2.5s"></circle>
+        <circle class="new" cx="32" cy="32" r="22" transform="rotate(105 32 32)" style="animation-delay: -2s"></circle>
+        <circle cx="32" cy="32" r="22" transform="rotate(150 32 32)" style="animation-delay: -1.5s"></circle>
+        <circle cx="32" cy="32" r="22" transform="rotate(195 32 32)" style="animation-delay: -1s"></circle>
+        <circle cx="32" cy="32" r="22" transform="rotate(240 32 32)" style="animation-delay: -0.5s"></circle>
+      </svg><span class="word"><span class="x">ex</span>trace</span></h1>
+    <p class="lede">Tracing for heterogeneous multi-core SoCs, where every core runs its own firmware and the shared memory is not cache-coherent. Every core writes compact records into its own lock-free ring. One dispatcher reads them all, and the host decodes them.</p>
+    <ul class="chips" aria-label="Highlights">
+      <li>2&ndash;8 byte records</li>
+      <li>no locks between cores</li>
+      <li>per-function ftrace flavors</li>
+      <li>caller recording</li>
+      <li>ARMv7-M &middot; RV32</li>
+      <li>freestanding, no dependencies</li>
+    </ul>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/dlebed/extrace">github.com/dlebed/extrace</a>
+      <a class="btn" href="#quickstart">Quick start</a>
+      <a class="btn" href="#perf">Measured costs</a>
+    </div>
+  </div>
+</header>
+
+<section id="why">
+  <div class="wrap">
+    <h2>Why extrace</h2>
+    <p class="sub">Built for SoCs with several subsystems, such as DSPs, MCUs and accelerators, each running its own firmware image. The cores share memory but no locks and no caches.</p>
+    <div class="grid three">
+      <div class="card"><span class="k">rings</span><h3>Many producers, one dispatcher</h3><p>Each core owns a single-producer, single-consumer ring with free-running indices. There are no cross-agent atomics, and each shared word has exactly one writer.</p></div>
+      <div class="card"><span class="k">cost</span><h3>Cheap when off, short when on</h3><p>A disabled event costs one load, a bit test and a branch, and its arguments are not evaluated. Only pointer arithmetic runs with interrupts masked.</p></div>
+      <div class="card"><span class="k">lifecycle</span><h3>Restart in any order</h3><p>Producer and consumer initialize and re-initialize in any order and at any time, from random or consistent shared memory.</p></div>
+      <div class="card"><span class="k">loss</span><h3>Drops are counted exactly</h3><p>When a ring is full, the newest records are dropped instead of blocking. The count is reported in-band as a <code>LOST</code> record.</p></div>
+      <div class="card"><span class="k">printf</span><h3>Deferred printf</h3><p>The device logs a 16-bit call-site ID and binary arguments. Format strings stay in the ELF, and the host does the formatting.</p></div>
+      <div class="card"><span class="k">port</span><h3>One header to port</h3><p>Timer, critical section, barriers and doorbells are inline hooks in one <code>extrace_port.h</code>. Builds with gcc and clang, warning-free.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="ftrace">
+  <div class="wrap">
+    <h2>Function entry tracing, one flavor per function</h2>
+    <p class="sub">Build with <code>-fpatchable-function-entry</code>. At run time the platform patches the NOP pad of each function it wants traced into a call to one trampoline entry, chosen per function. Because the flavor is the entry the patch calls, no instructions decide it at run time.</p>
+    <div class="tbl-wrap">
+      <table class="ft">
+        <thead><tr><th>Flavor</th><th>Records</th><th>Bytes (example)</th></tr></thead>
+        <tbody>
+          <tr><td><code>EXTRACE_FTRACE_MARK</code></td><td>That the function was called</td><td class="bytes">21 C7 34</td></tr>
+          <tr><td><code>EXTRACE_FTRACE_NONE</code></td><td>The call and its timestamp</td><td class="bytes">20 1D C7 34</td></tr>
+          <tr><td><code>EXTRACE_FTRACE_ARGS(n)</code></td><td>Also the first n argument registers: 1&ndash;4 on ARMv7-M, 1&ndash;8 on RV32</td><td class="bytes">22 19 0B 00 C7 34 07 AC 02 &hellip;</td></tr>
+          <tr><td><code>&hellip; | EXTRACE_FTRACE_CALLER</code></td><td>Any of these, plus the caller's return address (<code>FTRACE_CALLER</code> record)</td><td class="bytes">41 C7 34 93 18</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid two" style="margin-top:16px">
+      <div class="card">
+        <span class="k">patching</span>
+        <h3>Safe to patch while the code runs</h3>
+        <p><code>extrace_ftrace_patch(pc, flavor)</code> checks the pad first, then rewrites it in an order where every intermediate state is a valid program. It also changes a flavor in place, or restores the NOPs with <code>EXTRACE_FTRACE_OFF</code>. A wrong address is refused before anything is written.</p>
+      </div>
+      <div class="card">
+        <span class="k">footprint</span>
+        <h3>No tables on the device</h3>
+        <p>A record carries the return address, relative to <code>EXTRACE_CFG_FTRACE_BASE</code>, and the host maps it back to the function through the ELF. A linker fragment keeps the compiler's site table in the ELF only.</p>
+      </div>
+      <div class="card">
+        <span class="k">caller</span>
+        <h3>Who called it</h3>
+        <p>With <code>EXTRACE_CFG_FTRACE_CALLER=1</code>, any function can be patched with a <code>CALLER</code> flavor. The trampoline passes the caller's return address from <code>ra</code> (RV32) or <code>ip</code> (ARM), and the record gains one uvarint.</p>
+      </div>
+      <div class="card">
+        <span class="k">switch</span>
+        <h3>One global switch</h3>
+        <p>Tracing is on while the mask bit of system event <code>FTRACE</code> is set, and a consumer flips it like any other event. While it is off, a patched function runs only the trampoline's test: 6 instructions on RV32, 9 on Cortex-M4.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="wire">
+  <div class="wrap">
+    <h2>Compact wire format, plain consumer API</h2>
+    <p class="sub">Records are a varint header, an optional 32-bit timestamp delta and the payload. Wire format version&nbsp;1 includes the short <code>FTRACE</code> and <code>FTRACE_CALLER</code> shapes, which have no length field.</p>
+    <div class="card" style="margin-bottom:16px">
+      <span class="k">FTRACE ARGS(1) with caller: 9 bytes</span>
+      <div class="rec" aria-label="Record bytes">
+        <span>42<b>hdr</b></span><span>19<b>tsd</b></span><span>06<b>len</b></span><span>00<b>sign</b></span><span>C7 34<b>addr</b></span><span>93 18<b>caller</b></span><span>07<b>a0</b></span>
+      </div>
+      <p style="margin-top:8px">System event 8, kind <code>INTS</code>. Here <code>addr</code> is the return address minus <code>ftrace_base</code>, which the stream's <code>INFO</code> record carries.</p>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <span class="k">extrace_cons / extrace_disp</span>
+        <h3>Dispatcher with pluggable sinks</h3>
+        <p>Attach each ring with <code>extrace_cons_attach()</code> and register it with <code>extrace_disp_add_ring()</code>, then call <code>extrace_disp_poll()</code>. Bulk sinks forward raw chunks without copying, for example to PCIe or USB. Record sinks receive parsed, filtered events, for example for UART text or statistics.</p>
+      </div>
+      <div class="card">
+        <span class="k">extrace_rec</span>
+        <h3>Decoder helpers</h3>
+        <p><code>extrace_dec_next()</code> walks records. <code>extrace_rec_ints()</code> restores signedness, and <code>extrace_rec_ftrace()</code> returns the address, the caller and the argument registers of any function record, whatever its shape. <code>extrace_ctl_ev_set()</code> turns events on and off, function tracing included.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="perf">
+  <div class="wrap">
+    <h2>Measured cost per event</h2>
+    <p class="sub">Instructions retired from the trace point to the return, in the steady state. These are counted on emulators by <code>tests/perf/run_perf.py</code>, not timed, so they are not cycles or nanoseconds. Each value is copied from <code>bench/results.txt</code>, clang 18 <code>-O2</code>, library defaults.</p>
+
+    <div class="tiles">
+      <div class="tile"><div class="lbl">Event switched off</div><div class="val">4 <small>/ 5 insns</small></div><div class="note">RV32 / Cortex-M4: load, test, branch</div></div>
+      <div class="tile"><div class="lbl">Function built with the pad, not patched</div><div class="val">2 <small>/ 3 insns</small></div><div class="note">the NOPs: 2 &times; <code>c.nop</code> / 3 &times; <code>nop</code></div></div>
+      <div class="tile"><div class="lbl">Patched, FTRACE switch off</div><div class="val">6 <small>/ 9 insns</small></div><div class="note">RV32 / Cortex-M4, MARK and NONE flavors</div></div>
+      <div class="tile"><div class="lbl">Smallest function record</div><div class="val">3 <small>bytes</small></div><div class="note">MARK flavor: header and a 2-byte address</div></div>
+    </div>
+
+    <figure class="chart" id="c1">
+      <h3>Instructions per event</h3>
+      <p class="cap">Plain events and function entry flavors, from the trace point to the return. Shorter is cheaper.</p>
+      <div class="legend" aria-hidden="true"><span><i style="background:var(--s1)"></i>RV32 (rv32im_zce_zbb)</span><span><i style="background:var(--s2)"></i>Cortex-M4F</span></div>
+      <div class="plot"></div>
+      <details class="tview"><summary>Show as table</summary><div class="tbl-wrap"></div></details>
+    </figure>
+
+    <figure class="chart" id="c2">
+      <h3>The cost of recording the caller</h3>
+      <p class="cap">Each function flavor without and with <code>CALLER</code>, from the <code>EXTRACE_CFG_FTRACE_CALLER=1</code> build. The caller adds 2 bytes to each record in this benchmark.</p>
+      <div class="legend" aria-hidden="true"><span><i style="background:var(--s1)"></i>RV32 (rv32im_zce_zbb)</span><span><i style="background:var(--s2)"></i>Cortex-M4F</span></div>
+      <div class="plot"></div>
+      <details class="tview"><summary>Show as table</summary><div class="tbl-wrap"></div></details>
+    </figure>
+
+    <div class="env">
+      <dl>
+        <dt>Method</dt><dd><code>bench/run.sh</code> runs <code>tests/perf/run_perf.py</code> 5 times per configuration and fails if any count differs between runs. Every count was identical in all 5 runs. Each count is the image's own counter, checked against an instruction trace.</dd>
+        <dt>RV32</dt><dd><code>rv32im_zce_zbb</code>, QEMU 8.2.2 <code>-M virt -icount shift=0</code>, M-mode, <code>minstret</code></dd>
+        <dt>Cortex-M4F</dt><dd>ARMv7E-M with FPv4-SP, hard-float ABI, unicorn 2.1.4</dd>
+        <dt>Compiler</dt><dd>clang 18.1.3, <code>-O2 -ffreestanding -ffunction-sections -fdata-sections -std=c23</code>, <code>EXTRACE_CFG_FTRACE_BASE</code> at the image base</dd>
+        <dt>Host</dt><dd>Intel Xeon @ 2.10&nbsp;GHz, 4 CPUs, Linux 6.18</dd>
+      </dl>
+      <p>These were measured in a cloud VM. Instruction counts come from the emulators and do not depend on the host, but they are not cycle counts: on real cores, loads, stores and multi-register pushes take more than one cycle each.</p>
+    </div>
+  </div>
+</section>
+
+<section id="quickstart">
+  <div class="wrap">
+    <h2>Quick start</h2>
+    <p class="sub">The library is compiled per firmware image, so the image's port header, event catalog and configuration apply.</p>
+    <div class="grid two">
+      <div style="min-width:0">
+        <p class="code-title">CMakeLists.txt</p>
+<pre><span class="k">include</span>(extrace/cmake/extrace.cmake)
+<span class="k">enable_language</span>(ASM)
+<span class="k">extrace_add_image</span>(fw_a
+    PORT_DIR    port      <span class="c"># extrace_port.h</span>
+    EVENTS_DIR  events    <span class="c"># extrace_events.def</span>
+    COMPONENTS  prod
+    FTRACE_ARCH armv7m)   <span class="c"># or rv32; optional</span>
+<span class="k">target_link_libraries</span>(fw_a.elf PRIVATE fw_a::extrace)</pre>
+        <p class="code-title" style="margin-top:16px">events/extrace_events.def</p>
+<pre><span class="k">EXTRACE_GROUP</span>(CORE, 1)
+<span class="k">EXTRACE_EV</span>(RX_PKT, INTS,   ON, CORE, <span class="s">"len:u port:u"</span>)
+<span class="k">EXTRACE_EV</span>(LOG,    PRINTF, ON, CORE, <span class="s">""</span>)</pre>
+      </div>
+      <div style="min-width:0">
+        <p class="code-title">firmware</p>
+<pre><span class="k">#include</span> <span class="s">"extrace.h"</span>
+
+extrace_prod_init(&amp;cfg);          <span class="c">/* any time, any order */</span>
+
+EXTRACE_INTS(RX_PKT, len, port);   <span class="c">/* 1-16 integers */</span>
+EXTRACE_PRINTF(LOG, <span class="s">"rx %u on %u"</span>, len, port);
+
+<span class="c">/* host command: trace f() with 2 args and its caller */</span>
+extrace_ftrace_patch(pc_of_f,
+    EXTRACE_FTRACE_ARGS(2) | EXTRACE_FTRACE_CALLER);
+
+extrace_prod_poll();               <span class="c">/* periodic, one task */</span></pre>
+        <p class="code-title" style="margin-top:16px">build and test</p>
+<pre>cmake --preset test &amp;&amp; cmake --build --preset test
+ctest --preset test
+bench/run.sh       <span class="c"># the numbers on this page</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    extrace &middot; MIT &middot; <a href="https://github.com/dlebed/extrace">github.com/dlebed/extrace</a> &middot; Design: <code>DESIGN.md</code> &middot; Guides: <code>docs/</code>
+  </div>
+</footer>
+
+<button class="theme-toggle" type="button" id="theme">Theme</button>
+
+<script>
+(() => {
+  // bench/results.txt, "## rv32, clang -O2" and "## armv7m, clang -O2" (the first two sections)
+  const C1 = [
+    { name: 'EXTRACE_MARK', bytes: 2, rv: 56, m4: 64 },
+    { name: 'EXTRACE (NONE)', bytes: 3, rv: 74, m4: 81 },
+    { name: 'EXTRACE_INTS, 1 argument', bytes: 6, rv: 108, m4: 118 },
+    { name: 'FTRACE MARK', bytes: 3, rv: 90, m4: 81 },
+    { name: 'FTRACE NONE', bytes: 4, rv: 109, m4: 98 },
+    { name: 'FTRACE ARGS(1)', bytes: 7, rv: 180, m4: 188 },
+    { name: 'FTRACE ARGS(4)', bytes: 17, rv: 284, m4: 275 },
+  ];
+  // bench/results.txt, "EXTRACE_CFG_FTRACE_CALLER=1" sections
+  const C2 = [
+    { name: 'MARK', bytes: 3, rv: 90, m4: 81 },
+    { name: 'MARK | CALLER', bytes: 5, rv: 110, m4: 101 },
+    { name: 'NONE', bytes: 4, rv: 109, m4: 98 },
+    { name: 'NONE | CALLER', bytes: 6, rv: 129, m4: 126 },
+    { name: 'ARGS(1)', bytes: 7, rv: 180, m4: 188 },
+    { name: 'ARGS(1) | CALLER', bytes: 9, rv: 200, m4: 221 },
+  ];
+  const SERIES = [
+    { key: 'rv', label: 'RV32', color: 'var(--s1)' },
+    { key: 'm4', label: 'Cortex-M4F', color: 'var(--s2)' },
+  ];
+  const NS = 'http://www.w3.org/2000/svg';
+
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  function niceMax(v) {
+    const step = v > 200 ? 50 : 25;
+    return Math.ceil(v / step) * step;
+  }
+
+  // rounded data end, square at the baseline
+  function barPath(x, y, w, h) {
+    const r = Math.min(4, w, h / 2);
+    return `M${x},${y}h${w - r}a${r},${r} 0 0 1 ${r},${r}v${h - 2 * r}a${r},${r} 0 0 1 -${r},${r}h-${w - r}z`;
+  }
+
+  function table(fig, rows) {
+    const wrap = fig.querySelector('.tview .tbl-wrap');
+    const t = document.createElement('table');
+    const head = t.createTHead().insertRow();
+    for (const h of ['Event', 'Bytes', 'RV32', 'Cortex-M4F']) {
+      const th = document.createElement('th');
+      th.textContent = h;
+      if (h !== 'Event') th.className = 'num';
+      head.appendChild(th);
+    }
+    const body = t.createTBody();
+    for (const r of rows) {
+      const tr = body.insertRow();
+      [r.name, r.bytes, r.rv, r.m4].forEach((v, i) => {
+        const td = tr.insertCell();
+        td.textContent = v;
+        if (i) td.className = 'num';
+      });
+    }
+    wrap.appendChild(t);
+  }
+
+  function chart(fig, rows) {
+    const plot = fig.querySelector('.plot');
+    const tip = document.createElement('div');
+    tip.className = 'tip';
+    tip.setAttribute('role', 'status');
+    plot.appendChild(tip);
+    let svg;
+
+    function draw() {
+      if (svg) svg.remove();
+      const W = Math.max(280, plot.clientWidth);
+      const narrow = W < 520;
+      const labelW = narrow ? 0 : 190;
+      const barH = 10, gap = 2, groupGap = narrow ? 30 : 16;
+      const groupH = SERIES.length * barH + (SERIES.length - 1) * gap;
+      const top = 4, axisH = 24;
+      const rowH = groupH + groupGap + (narrow ? 0 : 0);
+      const H = top + rows.length * rowH + axisH;
+      const x0 = labelW + 4, x1 = W - 34;
+      const max = niceMax(Math.max(...rows.flatMap(r => [r.rv, r.m4])));
+      const sx = v => x0 + (x1 - x0) * v / max;
+      svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': fig.querySelector('h3').textContent + '. A table view follows.' });
+      plot.insertBefore(svg, tip);
+      const step = max > 200 ? 50 : 25;
+      for (let v = 0; v <= max; v += step) {
+        const x = sx(v);
+        el('line', { x1: x, x2: x, y1: top - 2, y2: H - axisH + 2, stroke: 'var(--grid)', 'stroke-width': 1 }, svg);
+        const t = el('text', { x, y: H - 6, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--ink-3)' }, svg);
+        t.textContent = v;
+      }
+      rows.forEach((r, i) => {
+        const gy = top + i * rowH + (narrow ? groupGap - 4 : groupGap / 2);
+        const lab = el('text', narrow
+          ? { x: x0, y: gy - 5, 'font-size': 12, fill: 'var(--ink-2)' }
+          : { x: labelW - 6, y: gy + groupH / 2 + 4, 'text-anchor': 'end', 'font-size': 12.5, fill: 'var(--ink-2)' }, svg);
+        lab.textContent = r.name;
+        SERIES.forEach((s, j) => {
+          const y = gy + j * (barH + gap);
+          const v = r[s.key];
+          const bar = el('path', { d: barPath(x0, y, sx(v) - x0, barH), fill: s.color, class: 'bar' }, svg);
+          const hit = el('rect', { x: x0, y: y - 4, width: Math.max(sx(v) - x0, 24), height: barH + 8, fill: 'transparent', class: 'hit', tabindex: 0,
+            'aria-label': `${r.name}, ${s.label}: ${v} instructions, ${r.bytes} bytes` }, svg);
+          const show = ev => {
+            bar.classList.add('on');
+            tip.replaceChildren();
+            const tt = document.createElement('div'); tt.className = 't'; tt.textContent = r.name + ' · ' + r.bytes + ' bytes';
+            const vv = document.createElement('div'); vv.className = 'v'; vv.textContent = v + ' instructions';
+            const nn = document.createElement('div'); nn.className = 'n';
+            const key = document.createElement('i'); key.style.background = s.color;
+            nn.append(key, document.createTextNode(s.label));
+            tip.append(tt, vv, nn);
+            const pr = plot.getBoundingClientRect();
+            let px, py;
+            if (ev && ev.clientX !== undefined && ev.type.startsWith('pointer')) { px = ev.clientX - pr.left; py = ev.clientY - pr.top; }
+            else { px = (sx(v) / W) * pr.width; py = (y / H) * pr.height; }
+            tip.classList.add('show');
+            const tw = tip.offsetWidth;
+            tip.style.left = Math.min(Math.max(0, px + 12), pr.width - tw) + 'px';
+            tip.style.top = Math.max(0, py - tip.offsetHeight - 10) + 'px';
+          };
+          const hide = () => { bar.classList.remove('on'); tip.classList.remove('show'); };
+          hit.addEventListener('pointermove', show);
+          hit.addEventListener('pointerleave', hide);
+          hit.addEventListener('focus', show);
+          hit.addEventListener('blur', hide);
+        });
+      });
+    }
+    draw();
+    let raf = 0;
+    new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); }).observe(plot);
+  }
+
+  for (const [id, rows] of [['c1', C1], ['c2', C2]]) {
+    const fig = document.getElementById(id);
+    chart(fig, rows);
+    table(fig, rows);
+  }
+
+  const btn = document.getElementById('theme');
+  const root = document.documentElement;
+  const sys = () => matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  const cur = () => root.getAttribute('data-theme') || sys();
+  const label = () => { btn.textContent = cur() === 'dark' ? 'Light mode' : 'Dark mode'; };
+  try { const t = localStorage.getItem('extrace-theme'); if (t) root.setAttribute('data-theme', t); } catch (e) {}
+  label();
+  btn.addEventListener('click', () => {
+    const next = cur() === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('extrace-theme', next); } catch (e) {}
+    label();
+  });
+})();
+</script>
+</body>
+</html>

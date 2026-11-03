@@ -1,0 +1,134 @@
+# extrace producer instruction counts (tests/perf/run_perf.py)
+# date:      2026-11-03T03:15Z
+# sources:   sha256 2019b52f6498d5b2 of include/ src/ port/ tests/perf/
+# host:      Intel(R) Xeon(R) Processor @ 2.10GHz, 4 CPUs, Linux 6.18.44-fc-v230
+# compiler:  Ubuntu clang version 18.1.3 (1ubuntu1)
+# emulators: QEMU emulator version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18); unicorn 2.1.4
+# targets:   rv32 = rv32im_zce_zbb (qemu virt, -icount shift=0, M-mode);
+#            armv7m = Cortex-M4F, hard-float ABI (unicorn)
+# flags:     clang --target=... -O2 or -Os -ffreestanding -ffunction-sections -fdata-sections -std=c23
+#            -DEXTRACE_CFG_FTRACE=1 -DEXTRACE_CFG_FTRACE_BASE=<image base>, library defaults otherwise
+# method:    instructions retired from the trace point to the return, steady state;
+#            5 runs per configuration, counts identical in every run (min = median = max)
+# note:      run inside a cloud VM; the counts come from the emulators and do not depend
+#            on the host. They are instructions, not cycles or nanoseconds.
+
+## rv32, clang -O2: producer .text 20802 bytes, publish threshold 2048 bytes
+
+| Event | Bytes | Instructions | Loads / stores | Breakdown |
+|---|---|---|---|---|
+| MARK | 2 | 56 | 17 / 8 | call site 8, extrace_emit_mark 48 |
+| NONE | 3 | 74 | 21 / 12 | call site 8, extrace_emit_none 66 |
+| INTS 1 arg | 6 | 108 | 28 / 22 | call site 10, extrace_emit_ints32_1 98 |
+| FTRACE not patched | 0 | 2 | 0 / 0 | patched entry 2 |
+| FTRACE MARK | 3 | 90 | 29 / 21 | patched entry 1, entry_insn 29, extrace_ftrace_mark 60 |
+| FTRACE NONE | 4 | 109 | 31 / 23 | patched entry 1, entry_insn 29, extrace_ftrace_none 79 |
+| FTRACE ARGS 1 arg | 7 | 180 | 39 / 32 | patched entry 1, entry_insn 33, extrace_ftrace_args 146 |
+| FTRACE ARGS 4 args | 17 | 284 | 48 / 42 | patched entry 1, entry_insn 33, extrace_ftrace_args 250 |
+| FTRACE patched, switch off | 0 | 6 | 1 / 0 | patched entry 1, entry_insn 5 |
+| MARK, event off | 0 | 4 | 1 / 0 | call site 4 |
+| publish | 0 | 56 | 15 / 11 | call site 1, extrace_prod_flush 1, publish 54 |
+| publish, nothing new | 0 | 39 | 9 / 6 | call site 1, extrace_prod_flush 1, publish 37 |
+
+## armv7m, clang -O2: producer .text 24414 bytes, publish threshold 2048 bytes
+
+| Event | Bytes | Instructions | Loads / stores | Breakdown |
+|---|---|---|---|---|
+| MARK | 2 | 64 | 20 / 11 | call site 9, extrace_emit_mark 55 |
+| NONE | 3 | 81 | 21 / 12 | call site 9, extrace_emit_none 72 |
+| INTS 1 arg | 6 | 118 | 26 / 19 | call site 12, extrace_emit_ints32_1 106 |
+| FTRACE not patched | 0 | 3 | 0 / 0 | patched entry 3 |
+| FTRACE MARK | 3 | 81 | 37 / 27 | patched entry 2, entry_insn 11, extrace_ftrace_mark 68 |
+| FTRACE NONE | 4 | 98 | 39 / 29 | patched entry 2, entry_insn 11, extrace_ftrace_none 85 |
+| FTRACE ARGS 1 arg | 7 | 188 | 48 / 39 | patched entry 2, entry_insn 14, extrace_ftrace_args 172 |
+| FTRACE ARGS 4 args | 17 | 275 | 57 / 49 | patched entry 2, entry_insn 13, extrace_ftrace_args 260 |
+| FTRACE patched, switch off | 0 | 9 | 3 / 0 | patched entry 2, entry_insn 7 |
+| MARK, event off | 0 | 5 | 1 / 0 | call site 5 |
+| publish | 0 | 63 | 19 / 15 | call site 2, extrace_prod_flush 1, publish 60 |
+| publish, nothing new | 0 | 44 | 13 / 10 | call site 2, extrace_prod_flush 1, publish 41 |
+
+## rv32, clang -O2, EXTRACE_CFG_FTRACE_CALLER=1: producer .text 22768 bytes, publish threshold 2048 bytes
+
+| Event | Bytes | Instructions | Loads / stores | Breakdown |
+|---|---|---|---|---|
+| MARK | 2 | 56 | 17 / 8 | call site 8, extrace_emit_mark 48 |
+| NONE | 3 | 74 | 21 / 12 | call site 8, extrace_emit_none 66 |
+| INTS 1 arg | 6 | 108 | 28 / 22 | call site 10, extrace_emit_ints32_1 98 |
+| FTRACE not patched | 0 | 2 | 0 / 0 | patched entry 2 |
+| FTRACE MARK | 3 | 90 | 29 / 21 | patched entry 1, entry_insn 29, extrace_ftrace_mark 60 |
+| FTRACE NONE | 4 | 109 | 31 / 23 | patched entry 1, entry_insn 29, extrace_ftrace_none 79 |
+| FTRACE ARGS 1 arg | 7 | 180 | 39 / 32 | patched entry 1, entry_insn 33, extrace_ftrace_args 146 |
+| FTRACE ARGS 4 args | 17 | 284 | 48 / 42 | patched entry 1, entry_insn 33, extrace_ftrace_args 250 |
+| FTRACE MARK, caller | 5 | 110 | 31 / 25 | patched entry 1, entry_insn 30, extrace_ftrace_mark_c 79 |
+| FTRACE NONE, caller | 6 | 129 | 34 / 28 | patched entry 1, entry_insn 30, extrace_ftrace_none_c 98 |
+| FTRACE ARGS 1 arg, caller | 9 | 200 | 41 / 36 | patched entry 1, entry_insn 34, extrace_ftrace_args_c 165 |
+| FTRACE patched, switch off | 0 | 6 | 1 / 0 | patched entry 1, entry_insn 5 |
+| MARK, event off | 0 | 4 | 1 / 0 | call site 4 |
+| publish | 0 | 56 | 15 / 11 | call site 1, extrace_prod_flush 1, publish 54 |
+| publish, nothing new | 0 | 39 | 9 / 6 | call site 1, extrace_prod_flush 1, publish 37 |
+
+## armv7m, clang -O2, EXTRACE_CFG_FTRACE_CALLER=1: producer .text 27416 bytes, publish threshold 2048 bytes
+
+| Event | Bytes | Instructions | Loads / stores | Breakdown |
+|---|---|---|---|---|
+| MARK | 2 | 64 | 20 / 11 | call site 9, extrace_emit_mark 55 |
+| NONE | 3 | 81 | 21 / 12 | call site 9, extrace_emit_none 72 |
+| INTS 1 arg | 6 | 118 | 26 / 19 | call site 12, extrace_emit_ints32_1 106 |
+| FTRACE not patched | 0 | 3 | 0 / 0 | patched entry 3 |
+| FTRACE MARK | 3 | 81 | 37 / 27 | patched entry 2, entry_insn 11, extrace_ftrace_mark 68 |
+| FTRACE NONE | 4 | 98 | 39 / 29 | patched entry 2, entry_insn 11, extrace_ftrace_none 85 |
+| FTRACE ARGS 1 arg | 7 | 188 | 48 / 39 | patched entry 2, entry_insn 14, extrace_ftrace_args 172 |
+| FTRACE ARGS 4 args | 17 | 275 | 57 / 49 | patched entry 2, entry_insn 13, extrace_ftrace_args 260 |
+| FTRACE MARK, caller | 5 | 101 | 37 / 29 | patched entry 2, entry_insn 12, extrace_ftrace_mark_c 87 |
+| FTRACE NONE, caller | 6 | 126 | 40 / 33 | patched entry 2, entry_insn 12, extrace_ftrace_none_c 112 |
+| FTRACE ARGS 1 arg, caller | 9 | 221 | 49 / 43 | patched entry 2, entry_insn 15, extrace_ftrace_args_c 204 |
+| FTRACE patched, switch off | 0 | 9 | 3 / 0 | patched entry 2, entry_insn 7 |
+| MARK, event off | 0 | 5 | 1 / 0 | call site 5 |
+| publish | 0 | 63 | 19 / 15 | call site 2, extrace_prod_flush 1, publish 60 |
+| publish, nothing new | 0 | 44 | 13 / 10 | call site 2, extrace_prod_flush 1, publish 41 |
+
+## rv32, clang -Os: producer .text 20022 bytes, publish threshold 2048 bytes
+
+| Event | Bytes | Instructions | Loads / stores | Breakdown |
+|---|---|---|---|---|
+| MARK | 2 | 57 | 17 / 8 | call site 8, extrace_emit_mark 49 |
+| NONE | 3 | 75 | 21 / 12 | call site 8, extrace_emit_none 67 |
+| INTS 1 arg | 6 | 110 | 28 / 22 | call site 10, extrace_emit_ints32_1 100 |
+| FTRACE not patched | 0 | 2 | 0 / 0 | patched entry 2 |
+| FTRACE MARK | 3 | 91 | 29 / 21 | patched entry 1, entry_insn 29, extrace_ftrace_mark 61 |
+| FTRACE NONE | 4 | 110 | 31 / 23 | patched entry 1, entry_insn 29, extrace_ftrace_none 80 |
+| FTRACE ARGS 1 arg | 7 | 180 | 38 / 31 | patched entry 1, entry_insn 33, extrace_ftrace_args 146 |
+| FTRACE ARGS 4 args | 17 | 284 | 47 / 41 | patched entry 1, entry_insn 33, extrace_ftrace_args 250 |
+| FTRACE patched, switch off | 0 | 6 | 1 / 0 | patched entry 1, entry_insn 5 |
+| MARK, event off | 0 | 4 | 1 / 0 | call site 4 |
+| publish | 0 | 56 | 15 / 11 | call site 1, extrace_prod_flush 1, publish 54 |
+| publish, nothing new | 0 | 39 | 9 / 6 | call site 1, extrace_prod_flush 1, publish 37 |
+
+## armv7m, clang -Os: producer .text 20066 bytes, publish threshold 2048 bytes
+
+| Event | Bytes | Instructions | Loads / stores | Breakdown |
+|---|---|---|---|---|
+| MARK | 2 | 65 | 20 / 11 | call site 9, extrace_emit_mark 56 |
+| NONE | 3 | 82 | 21 / 12 | call site 9, extrace_emit_none 73 |
+| INTS 1 arg | 6 | 117 | 25 / 19 | call site 12, extrace_emit_ints32_1 105 |
+| FTRACE not patched | 0 | 3 | 0 / 0 | patched entry 3 |
+| FTRACE MARK | 3 | 82 | 37 / 27 | patched entry 2, entry_insn 11, extrace_ftrace_mark 69 |
+| FTRACE NONE | 4 | 99 | 39 / 29 | patched entry 2, entry_insn 11, extrace_ftrace_none 86 |
+| FTRACE ARGS 1 arg | 7 | 177 | 48 / 40 | patched entry 2, entry_insn 14, extrace_ftrace_args 161 |
+| FTRACE ARGS 4 args | 17 | 268 | 57 / 50 | patched entry 2, entry_insn 13, extrace_ftrace_args 253 |
+| FTRACE patched, switch off | 0 | 9 | 3 / 0 | patched entry 2, entry_insn 7 |
+| MARK, event off | 0 | 5 | 1 / 0 | call site 5 |
+| publish | 0 | 63 | 19 / 15 | call site 2, extrace_prod_flush 1, publish 60 |
+| publish, nothing new | 0 | 44 | 13 / 10 | call site 2, extrace_prod_flush 1, publish 41 |
+
+## functional check: tests/ftrace/run_emu.py --emulator qemu
+
+    armv7m emu CALLER=0 on qemu: PASS (global checks 0x0)
+    armv7m emu CALLER=1 on qemu: PASS (global checks 0x0)
+    armv7m rec CALLER=0 on qemu: PASS (global checks 0x0)
+    armv7m rec CALLER=1 on qemu: PASS (global checks 0x0)
+    rv32 emu CALLER=0 on qemu: PASS (global checks 0x0)
+    rv32 emu CALLER=1 on qemu: PASS (global checks 0x0)
+    rv32 rec CALLER=0 on qemu: PASS (global checks 0x0)
+    rv32 rec CALLER=1 on qemu: PASS (global checks 0x0)
+

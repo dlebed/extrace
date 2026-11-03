@@ -1,0 +1,6 @@
+/* SPDX-License-Identifier: MIT */
+/* extrace_events.def: event catalog of the performance images */
+EXTRACE_GROUP(CORE, 1)
+EXTRACE_EV(P_MARK, MARK, ON, CORE, "")
+EXTRACE_EV(P_NONE, NONE, ON, CORE, "")
+EXTRACE_EV(P_INTS, INTS, ON, CORE, "a:u")

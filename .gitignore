@@ -1,0 +1,8 @@
+# editor / tool state
+/.idea/
+/.vscode/
+
+# build and python artifacts
+/build/
+__pycache__/
+*.pyc

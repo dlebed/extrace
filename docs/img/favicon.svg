@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+<style>:root{--free:#d2d0c7}@media (prefers-color-scheme: dark){:root{--free:#4a4a46}}</style>
+<g transform="translate(0 0) scale(1)" fill="none" stroke-linecap="round" stroke-width="12" stroke-dasharray="13.4 112.26">
+  <circle cx="32" cy="32" r="20" stroke="#2a78d6" transform="rotate(-64.2 32 32)"/>
+  <circle cx="32" cy="32" r="20" stroke="#2a78d6" transform="rotate(25.8 32 32)"/>
+  <circle cx="32" cy="32" r="20" stroke="#eb6834" transform="rotate(115.8 32 32)"/>
+  <circle cx="32" cy="32" r="20" style="stroke:var(--free)" transform="rotate(205.8 32 32)"/>
+</g>
+</svg>

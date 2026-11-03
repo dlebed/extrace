@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="128" viewBox="0 0 880 128" role="img" aria-label="Cost of tracing when it is off, in instructions">
+<title>Cost of tracing when it is off, in instructions</title>
+<rect x="0.5" y="0.5" width="879" height="127" rx="12" fill="#1a1a19" stroke="#2f2f2c"/>
+<rect x="16.0" y="16" width="203.0" height="96" rx="10" fill="#232321"/>
+<text x="30.0" y="40" fill="#c3c2b7" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="500" text-anchor="start">Event switched off</text>
+<text x="30.0" y="78" fill="#f0efec" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="34" font-weight="700" text-anchor="start">4</text>
+<text x="55.0" y="78" fill="#9a998f" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" text-anchor="start">/ 5 insns</text>
+<text x="30.0" y="100" fill="#9a998f" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">load, bit test, branch</text>
+<rect x="231.0" y="16" width="203.0" height="96" rx="10" fill="#232321"/>
+<text x="245.0" y="40" fill="#c3c2b7" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="500" text-anchor="start">Traced function, unpatched</text>
+<text x="245.0" y="78" fill="#f0efec" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="34" font-weight="700" text-anchor="start">2</text>
+<text x="270.0" y="78" fill="#9a998f" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" text-anchor="start">/ 3 insns</text>
+<text x="245.0" y="100" fill="#9a998f" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">only the NOPs in its entry pad</text>
+<rect x="446.0" y="16" width="203.0" height="96" rx="10" fill="#232321"/>
+<text x="460.0" y="40" fill="#c3c2b7" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="500" text-anchor="start">Patched, FTRACE switch off</text>
+<text x="460.0" y="78" fill="#f0efec" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="34" font-weight="700" text-anchor="start">6</text>
+<text x="485.0" y="78" fill="#9a998f" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" text-anchor="start">/ 9 insns</text>
+<text x="460.0" y="100" fill="#9a998f" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">RV32 / Cortex-M4</text>
+<rect x="661.0" y="16" width="203.0" height="96" rx="10" fill="#232321"/>
+<text x="675.0" y="40" fill="#c3c2b7" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="500" text-anchor="start">Smallest function record</text>
+<text x="675.0" y="78" fill="#f0efec" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="34" font-weight="700" text-anchor="start">3</text>
+<text x="700.0" y="78" fill="#9a998f" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" text-anchor="start">bytes</text>
+<text x="675.0" y="100" fill="#9a998f" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">header and a 2-byte address</text>
+</svg>

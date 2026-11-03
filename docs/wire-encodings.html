@@ -1,0 +1,1498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- docs/wire-encodings.html - interactive view of wire-format.md; self-contained, open in a browser. -->
+<title>extrace Ring Encodings</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column of sections; byte strips are the figures, scrolling sideways in their own boxes. */
+:root {
+  --page: #f9f9f7; --surface: #fcfcfb; --raised: #ffffff;
+  --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --rule: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+  --hdr: #2a78d6; --frame: #eb6834; --pay: #1baf7a;
+  --pad: #c3c2b7; --on-pad: #0b0b0b; --on-fill: #ffffff;
+  --focus: #2a78d6;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0d0d0d; --surface: #1a1a19; --raised: #222221;
+    --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --rule: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+    --hdr: #3987e5; --frame: #d95926; --pay: #199e70;
+    --pad: #4a4a46; --on-pad: #f0efec; --focus: #3987e5;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0d0d0d; --surface: #1a1a19; --raised: #222221;
+  --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --rule: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+  --hdr: #3987e5; --frame: #d95926; --pay: #199e70;
+  --pad: #4a4a46; --on-pad: #f0efec; --focus: #3987e5;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+body {
+  background: var(--page); color: var(--ink); font: 15px/1.55 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.05; letter-spacing: -0.01em; }
+/* logo: the ring mark (docs/img/gen_svg.py has the geometry) */
+h1 .mark { width: 0.9em; height: 0.9em; vertical-align: -0.12em; margin-right: 0.22em; }
+h1 .mark circle { fill: none; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 5.78 132.45; stroke: currentColor; opacity: .22; }
+h1 .mark .rec { stroke: #2a78d6; opacity: 1; }
+h1 .mark .new { stroke: #eb6834; opacity: 1; }
+h2 { font-size: 26px; line-height: 1.15; }
+h3 { font-size: 17px; line-height: 1.25; }
+p { margin: 0; }
+code, .mono { font-family: var(--f-mono); font-size: 0.92em; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+header.top { padding-block: 40px 20px; display: grid; gap: 14px; }
+.eyebrow { font: 500 12px/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.lead { color: var(--ink-2); max-width: 68ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; font-size: 13px; color: var(--ink-2); }
+.legend .key { display: inline-flex; gap: 8px; align-items: center; }
+.sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; flex: none; }
+.sw.hdr { background: var(--hdr); } .sw.frame { background: var(--frame); } .sw.pay { background: var(--pay); }
+.sw.pad { background: var(--pad); } .sw.skip { border: 1px solid var(--axis); background: transparent; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+nav.toc a { text-decoration: none; font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--ring); color: var(--ink-2); background: var(--surface); }
+nav.toc a:hover { color: var(--ink); border-color: var(--axis); }
+
+section { padding-block: 36px 8px; display: grid; gap: 16px; border-top: 1px solid var(--rule); margin-top: 28px; }
+.sec-head { display: grid; gap: 6px; }
+.sec-head p { color: var(--ink-2); max-width: 72ch; }
+.group-title { font: 600 12px/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 14px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+.card-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.card .api { font: 12px var(--f-mono); color: var(--ink-2); }
+.card .size { font: 500 12px var(--f-mono); color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.card .note { font-size: 13px; color: var(--ink-2); }
+details.ft summary { font-size: 12px; color: var(--muted); cursor: pointer; }
+details.ft table { margin-top: 8px; }
+
+/* byte strips */
+.strip { overflow-x: auto; padding-bottom: 4px; }
+.recs { display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: flex-start; }
+.strip.nowrap .recs { flex-wrap: nowrap; }
+.rec { display: grid; gap: 4px; }
+.rec-cap { font: 11px var(--f-mono); color: var(--muted); white-space: nowrap; }
+.rec-cap b { color: var(--ink-2); font-weight: 600; }
+.fields { display: flex; flex-wrap: wrap; gap: 8px 6px; align-items: flex-start; }
+.fld { display: grid; gap: 3px; justify-items: start; border-radius: 5px; outline: none; cursor: default; }
+.fld:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cells { display: flex; gap: 2px; }
+.c { min-width: 26px; height: 26px; padding: 0 3px; border-radius: 4px; display: grid; place-items: center; font: 500 12px/1 var(--f-mono); color: var(--on-fill); font-variant-numeric: tabular-nums; }
+.fld[data-role="hdr"] .c { background: var(--hdr); }
+.fld[data-role="frame"] .c { background: var(--frame); }
+.fld[data-role="pay"] .c { background: var(--pay); }
+.fld[data-role="pad"] .c { background: var(--pad); color: var(--on-pad); }
+.fld[data-role="skip"] .c { background: transparent; color: var(--muted); box-shadow: inset 0 0 0 1px var(--axis); }
+.c.more { background: transparent !important; color: var(--ink-2) !important; box-shadow: inset 0 0 0 1px var(--axis); font-size: 11px; padding: 0 6px; }
+.fld .lab { font: 11px/1.1 var(--f-mono); color: var(--ink-2); white-space: nowrap; }
+.fld.hot .c:not(.more) { filter: brightness(1.12) saturate(1.05); box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--ink); }
+
+/* tooltip */
+#tip { position: fixed; z-index: 50; pointer-events: none; max-width: min(320px, calc(100vw - 24px)); background: var(--raised); color: var(--ink); border: 1px solid var(--ring); border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,0.18); padding: 10px 12px; font-size: 13px; display: grid; gap: 4px; }
+#tip .v { font: 600 15px var(--f-mono); overflow-wrap: anywhere; }
+#tip .k { display: flex; gap: 8px; align-items: center; color: var(--ink-2); }
+#tip .k i { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
+#tip .b { font: 12px var(--f-mono); color: var(--ink-2); overflow-wrap: anywhere; }
+#tip .n { color: var(--ink-2); }
+
+/* tables */
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 12px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.mono { font-family: var(--f-mono); font-size: 12px; overflow-wrap: anywhere; }
+.tbl { overflow-x: auto; }
+
+/* size chart */
+.chart-box { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.chart-tools { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
+#sizes-chart svg { display: block; width: 100%; overflow: visible; }
+#sizes-chart text { font-family: var(--f-body); }
+.seg { cursor: default; }
+.seg:hover, .seg:focus { filter: brightness(1.12); outline: none; }
+
+button, select, input, textarea { font: inherit; color: var(--ink); }
+button { background: var(--surface); border: 1px solid var(--axis); border-radius: 7px; padding: 6px 12px; cursor: pointer; font-size: 14px; }
+button:hover { border-color: var(--ink-2); }
+button.primary { background: var(--ink); color: var(--page); border-color: var(--ink); }
+button[disabled] { opacity: 0.45; cursor: default; }
+select, input, textarea { background: var(--raised); border: 1px solid var(--axis); border-radius: 7px; padding: 6px 9px; min-width: 0; }
+textarea { font-family: var(--f-mono); font-size: 13px; width: 100%; resize: vertical; }
+label.f { display: grid; gap: 4px; font-size: 12px; color: var(--ink-2); min-width: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+
+/* ring */
+.ring-box { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.ring-head { display: grid; gap: 4px; }
+.ring-head .step { font: 500 12px var(--f-mono); color: var(--muted); }
+.ring-head p { color: var(--ink-2); max-width: 75ch; min-height: 3.1em; }
+.ring-grid-wrap { overflow-x: auto; }
+.ring { display: grid; grid-template-columns: auto repeat(16, minmax(20px, 1fr)); gap: 2px; min-width: 380px; }
+.ring .ofs { font: 10px var(--f-mono); color: var(--muted); align-self: center; padding-right: 6px; text-align: right; font-variant-numeric: tabular-nums; }
+.rc { height: 30px; border-radius: 4px; display: grid; place-items: center; font: 500 11px/1 var(--f-mono); color: var(--on-fill); position: relative; }
+.rc[data-role="hdr"] { background: var(--hdr); } .rc[data-role="frame"] { background: var(--frame); }
+.rc[data-role="pay"] { background: var(--pay); } .rc[data-role="pad"] { background: var(--pad); color: var(--on-pad); }
+.rc[data-role="skip"], .rc.empty { background: transparent; color: var(--muted); box-shadow: inset 0 0 0 1px var(--axis); }
+.rc.free { opacity: 0.32; }
+.rc.new { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--ink); z-index: 1; }
+.rc.head::before, .rc.tail::after { content: ""; position: absolute; top: -4px; bottom: -4px; width: 3px; border-radius: 2px; left: -3px; }
+.rc.head::before { background: var(--ink); }
+.rc.tail::after { background: var(--muted); left: -3px; }
+.rc.hot { outline: 2px solid var(--ink); outline-offset: 1px; z-index: 2; }
+.ring-stats { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); }
+.ring-stats b { color: var(--ink); font-family: var(--f-mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 12px var(--f-mono); padding: 3px 8px; border-radius: 999px; border: 1px solid var(--ring); color: var(--ink-2); background: var(--raised); }
+.chip.drop { border-color: var(--ink-2); color: var(--ink); }
+.marker-key { display: inline-flex; gap: 6px; align-items: center; }
+.marker-key i { width: 3px; height: 14px; border-radius: 2px; display: inline-block; }
+
+.panel { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.out-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 13px; color: var(--ink-2); }
+.hexline { font: 13px var(--f-mono); overflow-wrap: anywhere; background: var(--raised); border: 1px solid var(--ring); border-radius: 7px; padding: 8px 10px; }
+.err { color: var(--ink); font-size: 13px; border-left: 3px solid var(--frame); padding-left: 10px; }
+.declist { display: grid; gap: 10px; }
+.panel > *, .declist > *, .decrow > *, .ring-box > *, .chart-box > * { min-width: 0; }
+.decrow { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 10px; align-items: start; }
+.decrow .at { font: 11px/1.4 var(--f-mono); color: var(--muted); padding-top: 2px; font-variant-numeric: tabular-nums; }
+
+.vbytes { display: flex; flex-wrap: wrap; gap: 10px; }
+.vbyte { display: grid; gap: 4px; justify-items: center; }
+.bits { display: flex; gap: 1px; }
+.bit { width: 18px; height: 24px; display: grid; place-items: center; font: 500 12px var(--f-mono); border-radius: 3px; background: var(--pay); color: var(--on-fill); }
+.bit.cont { background: var(--frame); }
+.vbyte .h { font: 600 13px var(--f-mono); }
+.vbyte .s { font: 11px var(--f-mono); color: var(--muted); }
+.small { font-size: 12px; color: var(--muted); }
+@media (max-width: 560px) {
+  .decrow { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  h2 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Wire format v1 · varint · ring buffer</div>
+    <h1><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><circle class="rec" cx="32" cy="32" r="22" transform="rotate(-75 32 32)"></circle><circle class="rec" cx="32" cy="32" r="22" transform="rotate(-30 32 32)"></circle><circle class="rec" cx="32" cy="32" r="22" transform="rotate(15 32 32)"></circle><circle class="rec" cx="32" cy="32" r="22" transform="rotate(60 32 32)"></circle><circle class="new" cx="32" cy="32" r="22" transform="rotate(105 32 32)"></circle><circle cx="32" cy="32" r="22" transform="rotate(150 32 32)"></circle><circle cx="32" cy="32" r="22" transform="rotate(195 32 32)"></circle><circle cx="32" cy="32" r="22" transform="rotate(240 32 32)"></circle></svg>extrace Ring Encodings</h1>
+    <p class="lead">Every way the producer can write into the ring, byte by byte: user events, system records, function trace and padding. The examples are real producer output. Hover or focus any field for its decoded value.</p>
+    <div class="legend" aria-label="Legend">
+      <span class="key"><span class="sw hdr"></span>Header: <code>(id &lt;&lt; 3) | kind</code></span>
+      <span class="key"><span class="sw frame"></span>Framing: timestamp delta, length</span>
+      <span class="key"><span class="sw pay"></span>Payload</span>
+      <span class="key"><span class="sw pad"></span>Padding</span>
+      <span class="key"><span class="sw skip"></span>Skipped or not written</span>
+    </div>
+    <nav class="toc" aria-label="Sections">
+      <a href="#catalog">Every encoding</a><a href="#sizes">Record sizes</a><a href="#ring">In the ring</a>
+      <a href="#builder">Build a record</a><a href="#decoder">Decode bytes</a><a href="#varints">Varints</a>
+    </nav>
+  </header>
+
+  <section id="catalog">
+    <div class="sec-head">
+      <h2>Every encoding</h2>
+      <p>A record is <code>hdr [tsd] [len payload]</code>. The kind in the header decides which fields follow. The one exception is function tracing: <code>FTRACE</code> headers <code>20</code> and <code>21</code> carry one varint, the address, and <code>FTRACE_CALLER</code> headers <code>40</code> and <code>41</code> two, the address and the caller, with no length field.</p>
+    </div>
+    <div id="cat"></div>
+  </section>
+
+  <section id="sizes">
+    <div class="sec-head">
+      <h2>Record sizes</h2>
+      <p>Bytes per record for the examples above, split by field role. A function call costs 3 bytes without a timestamp and 4 with one. FRAG (516 bytes) and padding are left out.</p>
+    </div>
+    <div class="chart-box">
+      <div class="chart-tools">
+        <div class="legend" aria-hidden="true">
+          <span class="key"><span class="sw hdr"></span>Header</span>
+          <span class="key"><span class="sw frame"></span>Framing</span>
+          <span class="key"><span class="sw pay"></span>Payload</span>
+        </div>
+        <button type="button" id="sizes-toggle" aria-expanded="false" aria-controls="sizes-table">Show table</button>
+      </div>
+      <div id="sizes-chart"></div>
+      <div class="tbl" id="sizes-table" hidden></div>
+    </div>
+  </section>
+
+  <section id="ring">
+    <div class="sec-head">
+      <h2>In the ring</h2>
+      <p>A 128-byte ring, one cell per byte, 16 per row. Step through a producer session: records append at the head, the consumer releases at the tail, and the ring end, alignment, drops and a cancel each leave their own marks.</p>
+    </div>
+    <div class="ring-box">
+      <div class="row">
+        <button type="button" id="r-prev" aria-label="Previous step">◀ Back</button>
+        <button type="button" id="r-next" class="primary" aria-label="Next step">Next ▶</button>
+        <button type="button" id="r-play">Play</button>
+        <button type="button" id="r-reset">Reset</button>
+      </div>
+      <div class="ring-head" aria-live="polite">
+        <div class="step" id="r-step"></div>
+        <h3 id="r-title"></h3>
+        <p id="r-text"></p>
+      </div>
+      <div class="chips" id="r-chips"></div>
+      <div class="ring-grid-wrap"><div class="ring" id="r-grid" role="grid" aria-label="Ring bytes"></div></div>
+      <div class="ring-stats" id="r-stats"></div>
+      <div class="legend">
+        <span class="marker-key"><i style="background: var(--ink)"></i>head: next write</span>
+        <span class="marker-key"><i style="background: var(--muted)"></i>tail: next read</span>
+        <span class="key"><span class="sw" style="box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--ink)"></span>written in this step</span>
+        <span class="key"><span class="sw pay" style="opacity: .32"></span>released: free space, old bytes remain</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="builder">
+    <div class="sec-head">
+      <h2>Build a record</h2>
+      <p>Pick a record type and change its fields. The bytes are encoded and then decoded by the same rules as the C decoder.</p>
+    </div>
+    <div class="panel">
+      <div class="row" id="b-form"></div>
+      <div id="b-out" class="declist"></div>
+    </div>
+  </section>
+
+  <section id="decoder">
+    <div class="sec-head">
+      <h2>Decode bytes</h2>
+      <p>Paste hex from a ring dump or a bulk frame. Padding is skipped, timestamps accumulate from the last SYNC or LOST anchor. PRINTF sites 0–3 use the descriptors of the examples; other sites show their raw argument bytes.</p>
+    </div>
+    <div class="panel">
+      <label class="f" for="d-in">Hex bytes
+        <textarea id="d-in" rows="4" spellcheck="false"></textarea>
+      </label>
+      <div class="row">
+        <button type="button" class="primary" id="d-go">Decode</button>
+        <button type="button" id="d-sample">Load sample</button>
+        <button type="button" id="d-clear">Clear</button>
+      </div>
+      <div id="d-out" class="declist"></div>
+    </div>
+  </section>
+
+  <section id="varints">
+    <div class="sec-head">
+      <h2>Varints</h2>
+      <p>Every number on the wire is an unsigned LEB128 varint: 7 bits per byte, low bits first, the top bit set while more bytes follow. Signed values are zigzag-encoded first, so small negatives stay short.</p>
+    </div>
+    <div class="panel">
+      <div class="row">
+        <label class="f" for="v-in">Value (decimal, 0x hex, negative for zigzag)
+          <input id="v-in" value="300" spellcheck="false" style="width: 260px">
+        </label>
+      </div>
+      <div id="v-out"></div>
+    </div>
+  </section>
+</div>
+<div id="tip" role="tooltip" hidden></div>
+
+<script>
+/* codec.js - extrace wire format (docs/wire-format.md): encoder and annotating decoder. */
+const K = { NONE: 0, MARK: 1, INTS: 2, PRINTF: 3, BUF: 4, STRUCT: 5, STR: 6, EXT: 7 };
+const KIND_NAME = ['NONE', 'MARK', 'INTS', 'PRINTF', 'BUF', 'STRUCT', 'STR', 'EXT'];
+const SYS = { SYNC: 1, LOST: 2, INFO: 3, FTRACE: 4, CFG: 5, PANIC: 6, FRAG: 7, FTRACE_CALLER: 8, SKIP: 9 };
+const SYS_NAME = { 1: 'SYNC', 2: 'LOST', 3: 'INFO', 4: 'FTRACE', 5: 'CFG', 6: 'PANIC', 7: 'FRAG', 8: 'FTRACE_CALLER', 9: 'SKIP' };
+const USER_NAME = { 16: 'T_MARK', 17: 'T_NONE', 18: 'T_INTS', 19: 'T_PRINTF', 20: 'T_BUF',
+                    21: 'T_STR', 22: 'T_ANY', 29: 'T_STRUCT' };
+const AC = { U32: 1, S32: 2, U64: 3, S64: 4, F32: 5, F64: 6, STR: 7, PTR: 8, CSTR: 9 };
+const AC_NAME = ['', 'U32', 'S32', 'U64', 'S64', 'F32', 'F64', 'STR', 'PTR', 'CSTR'];
+const M64 = (1n << 64n) - 1n;
+
+/* ---- varints ---- */
+function uv(v) {
+    v = BigInt(v);
+    if (v < 0n || v > M64) throw new RangeError('value out of 64-bit range');
+    const out = [];
+    do {
+        const b = Number(v & 0x7Fn);
+        v >>= 7n;
+        out.push(v ? b | 0x80 : b);
+    } while (v);
+    return out;
+}
+const zz = v => (BigInt(v) >= 0n ? BigInt(v) << 1n : ((-BigInt(v)) << 1n) - 1n);
+const unzz = u => (u & 1n ? -((u + 1n) >> 1n) : u >> 1n);
+
+/* uvarint at p: {v: BigInt, n} or null (truncated) or {bad} (over 10 bytes) */
+function getUv(b, p) {
+    let v = 0n, s = 0n;
+    for (let i = 0; p + i < b.length; i++) {
+        const c = b[p + i];
+        if (c === null || c === undefined) return null;
+        v |= BigInt(c & 0x7F) << s;
+        s += 7n;
+        if (!(c & 0x80)) return { v, n: i + 1 };
+        if (i >= 9) return { bad: true };
+    }
+    return null;
+}
+
+/* ---- encoder ---- */
+const hdr = (id, kind) => uv((BigInt(id) << 3n) | BigInt(kind));
+
+function rec(id, kind, tsd, payload = []) {
+    const out = hdr(id, kind);
+    if (kind !== K.MARK) out.push(...uv(tsd));
+    if (kind >= K.INTS) out.push(...uv(payload.length), ...payload);
+    return out;
+}
+
+/* INTS: values [{v: BigInt, signed: bool}] */
+function ints(id, tsd, vals) {
+    let sm = 0n;
+    const p = [];
+    vals.forEach((x, i) => {
+        if (x.signed) sm |= 1n << BigInt(i);
+        p.push(...uv(x.signed ? zz(x.v) : x.v));
+    });
+    return rec(id, K.INTS, tsd, [...uv(sm), ...p]);
+}
+
+function f32(x) {
+    const d = new DataView(new ArrayBuffer(4));
+    d.setFloat32(0, x, true);
+    return [...new Uint8Array(d.buffer)];
+}
+function f64(x) {
+    const d = new DataView(new ArrayBuffer(8));
+    d.setFloat64(0, x, true);
+    return [...new Uint8Array(d.buffer)];
+}
+
+/* PRINTF: args [{cls, v}] - v BigInt for ints, Number for floats, string for STR */
+function printfArg(a) {
+    switch (a.cls) {
+    case AC.S32: case AC.S64: return uv(zz(a.v));
+    case AC.F32: return f32(a.v);
+    case AC.F64: return f64(a.v);
+    case AC.STR: {
+        const s = [...new TextEncoder().encode(a.v)].slice(0, 64);
+        return [...uv(s.length), ...s];
+    }
+    default: return uv(a.v);
+    }
+}
+const printf = (id, tsd, site, args) =>
+    rec(id, K.PRINTF, tsd, [...uv(site), ...args.flatMap(printfArg)]);
+
+const sync = ts => rec(SYS.SYNC, K.INTS, 0, [0, ...uv(ts)]);
+const lost = (count, ts, bytes) =>
+    rec(SYS.LOST, K.INTS, 0, [0, ...uv(count), ...uv(ts),
+                              ...(bytes === undefined ? [] : uv(bytes))]);
+const cfg = (tsd, gen) => rec(SYS.CFG, K.INTS, tsd, [0, ...uv(gen)]);
+const panic = (tsd, reason, pc) => rec(SYS.PANIC, K.INTS, tsd, [0, ...uv(reason), ...uv(pc)]);
+const frag = (tsd, xfer, ev, total, off, data) =>
+    rec(SYS.FRAG, K.EXT, tsd, [1, ...uv(xfer), ...uv(ev), ...uv(total), ...uv(off), ...data]);
+
+function info(o) {
+    const f = [o.wire, o.layout, o.flags, o.freq, o.ring, o.epoch, o.size, o.evCount, o.ptr,
+               o.siteBits];
+    const p = [...uv(13), ...f.flatMap(uv), ...uv(o.bid.length), ...o.bid];
+    const name = [...new TextEncoder().encode(o.name)].slice(0, 8);
+    p.push(...uv(name.length), ...name, ...uv(o.ftraceBase));
+    return rec(SYS.INFO, K.BUF, o.tsd, p);
+}
+
+/*
+ * FTRACE: shape 1 MARK, 2 NONE, 3 ARGS (the function's flavor); addr = return address - base.
+ * With the caller (the caller's return address - base): FTRACE_CALLER, the caller after the address.
+ */
+function ftrace(mode, tsd, addr, args = [], caller = null) {
+    const id = caller === null ? SYS.FTRACE : SYS.FTRACE_CALLER;
+    const lead = caller === null ? uv(addr) : [...uv(addr), ...uv(caller)];
+    if (mode === 1) return [(id << 3) | K.MARK, ...lead];
+    if (mode === 2) return [(id << 3) | K.NONE, ...uv(tsd), ...lead];
+    return rec(id, K.INTS, tsd, [0, ...lead, ...args.flatMap(uv)]);
+}
+
+/* FTRACE (1) and FTRACE_CALLER (2) in the NONE and MARK shapes: varints without a length. */
+const ftraceShort = hv => (hv >> 1 === SYS.FTRACE << 2 ? 1 : hv >> 1 === SYS.FTRACE_CALLER << 2 ? 2 : 0);
+
+/* Padding of exactly gap bytes (extrace_put_pad): written bytes, then null for skipped ones. */
+function pad(gap) {
+    if (gap === 1) return [0x00];
+    let k, n;
+    for (k = 1;; k++) {
+        n = gap - 1 - k;
+        if (k >= 4 || uv(n).length <= k) break;
+    }
+    const out = [0x04];
+    for (let i = 1; i < k; i++, n >>= 7) out.push((n & 0x7F) | 0x80);
+    out.push(n);
+    while (out.length < gap) out.push(null);
+    return out;
+}
+
+/* ---- decoder ---- */
+const hex2 = b => (b === null ? '··' : b.toString(16).toUpperCase().padStart(2, '0'));
+const hexv = v => '0x' + v.toString(16).toUpperCase();
+const evName = id => SYS_NAME[id] || USER_NAME[id] || `event ${id}`;
+
+/* field: role hdr | frame | pay | pad | skip */
+const F = (role, name, bytes, value, note) => ({ role, name, bytes, value, note });
+
+/*
+ * Decode a byte array (null = byte not written) into items:
+ *   {kind:'pad'|'rec'|'err', off, len, fields, title, sub, ts}
+ * hints: {sites: {site: [cls...]}, structs: {id: [[name, size]...]}}
+ */
+function decode(b, hints = {}) {
+    const items = [];
+    let p = 0, ts = null;
+    while (p < b.length) {
+        const off = p, c = b[p];
+        if (c === null) { /* unwritten bytes outside padding */
+            let q = p;
+            while (q < b.length && b[q] === null) q++;
+            items.push({ kind: 'pad', off, len: q - p, title: 'Not written', sub: '',
+                         fields: [F('skip', 'unwritten', b.slice(p, q), `${q - p} bytes`, '')] });
+            p = q;
+            continue;
+        }
+        if (c === 0x00) {
+            items.push({ kind: 'pad', off, len: 1, title: 'PAD1', sub: 'one filler byte',
+                         fields: [F('pad', 'PAD1', [0], 'filler', 'Header 00: ID 0, kind NONE. Skipped by every decoder.')] });
+            p++;
+            continue;
+        }
+        if (c === 0x04) {
+            const r = getUv(b, p + 1);
+            if (!r || r.bad) { items.push(err(b, off, 'PADN length cut off or malformed')); break; }
+            const n = Number(r.v), body = b.slice(p + 1 + r.n, p + 1 + r.n + n);
+            const fields = [F('pad', 'PADN', [4], 'padding header', 'Header 04: ID 0, kind BUF.'),
+                            F('pad', 'n', b.slice(p + 1, p + 1 + r.n), `${n} bytes skipped`,
+                              r.n > 1 && uv(n).length < r.n ? 'Over-long varint: no minimal encoding fits this gap exactly.' : 'Bytes that follow and are skipped.')];
+            if (n) fields.push(F('skip', 'skipped', body, `${n} bytes`,
+                                 body.length < n ? `${n - body.length} of them lie past the end of this piece.` : 'Never written by the producer, or stale bytes of a cancelled record.'));
+            const len = 1 + r.n + n;
+            items.push({ kind: 'pad', off, len, title: 'PADN', sub: `gap of ${len} bytes`, fields });
+            p += len;
+            continue;
+        }
+        const h = getUv(b, p);
+        if (!h || h.bad) { items.push(err(b, off, 'Header cut off or malformed')); break; }
+        const hv = Number(h.v), id = hv >> 3, kind = hv & 7;
+        if (!id) { items.push(err(b, off, 'Header with ID 0 is not padding')); break; }
+        const fields = [F('hdr', 'hdr', b.slice(p, p + h.n), `${evName(id)} · ${KIND_NAME[kind]}${ftraceShort(hv) ? ' shape' : ''}`,
+                          `(ID ${id} << 3) | kind ${kind} = ${hv}, ${h.n} byte${h.n > 1 ? 's' : ''}`)];
+        let q = p + h.n, tsd = null, len = 0;
+        const short = ftraceShort(hv) > 0;
+        if (kind !== K.MARK) {
+            const t = getUv(b, q);
+            if (!t || t.bad) { items.push(err(b, off, 'Timestamp delta cut off')); break; }
+            tsd = t.v;
+            const anchor = kind === K.INTS && (id === SYS.SYNC || id === SYS.LOST);
+            fields.push(F('frame', 'tsd', b.slice(q, q + t.n), anchor ? '0 (anchor)' : `+${tsd} ticks`,
+                          anchor ? 'Always 0: the payload carries the absolute time.' : 'Ticks since the previous timed record.'));
+            q += t.n;
+        }
+        let pl;
+        if (kind >= K.INTS) {
+            const l = getUv(b, q);
+            if (!l || l.bad) { items.push(err(b, off, 'Length cut off')); break; }
+            len = Number(l.v);
+            fields.push(F('frame', 'len', b.slice(q, q + l.n), `${len} bytes`, 'Payload length.'));
+            q += l.n;
+            if (q + len > b.length) { items.push(err(b, off, `Payload of ${len} bytes runs past the end`)); break; }
+            pl = b.slice(q, q + len);
+        } else if (short) {
+            let cut = false;
+            for (let i = 0; i < ftraceShort(hv); i++) {
+                const a = getUv(b, q + len);
+                if (!a || a.bad) { cut = true; break; }
+                len += a.n;
+            }
+            if (cut) { items.push(err(b, off, `${evName(id)} ${len ? 'caller' : 'address'} cut off`)); break; }
+            pl = b.slice(q, q + len);
+        } else {
+            pl = [];
+        }
+        const pf = payloadFields(id, kind, pl, hints, short);
+        fields.push(...pf.fields);
+        q += len;
+        /* timeline */
+        if (pf.anchor !== undefined) ts = pf.anchor;
+        else if (tsd !== null && ts !== null) ts += tsd;
+        items.push({ kind: 'rec', off, len: q - p, title: evName(id), sub: pf.sub || KIND_NAME[kind],
+                     id, k: kind, fields, ts: ts === null ? null : ts, timed: kind !== K.MARK,
+                     detail: pf.detail || '' });
+        p = q;
+    }
+    return items;
+}
+
+function err(b, off, msg) {
+    return { kind: 'err', off, len: b.length - off, title: 'Cannot decode', sub: msg,
+             fields: [F('skip', 'bytes', b.slice(off), `${b.length - off} bytes`, msg)] };
+}
+
+/* split a payload of varints, naming each one */
+function varFields(pl, names, from = 0) {
+    const out = [];
+    let p = from, i = 0;
+    while (p < pl.length) {
+        const r = getUv(pl, p);
+        if (!r || r.bad) { out.push(F('pay', 'bad', pl.slice(p), 'malformed', '')); break; }
+        const nm = typeof names === 'function' ? names(i, r.v) : (names[i] || `v${i}`);
+        out.push({ ...F('pay', nm, pl.slice(p, p + r.n), null, ''), raw: r.v });
+        p += r.n;
+        i++;
+    }
+    return out;
+}
+
+function intsFields(id, pl, names, sub) {
+    const s = getUv(pl, 0);
+    if (!s || s.bad) return { fields: [F('pay', 'bad', pl, 'malformed', '')] };
+    const sm = s.v;
+    const f = [F('pay', 'sm', pl.slice(0, s.n), sm ? `0b${sm.toString(2)}` : '0',
+                 sm ? 'Sign mask: bit i set = value i is zigzag-encoded.' : 'Sign mask: every value is unsigned.')];
+    const nm = i => (typeof names === 'function' ? names(i) : names && names[i]) || `v${i}`;
+    const vs = varFields(pl, nm, s.n);
+    vs.forEach((x, i) => {
+        if (x.raw === undefined) return;
+        const signed = (sm >> BigInt(i)) & 1n;
+        const v = signed ? unzz(x.raw) : x.raw;
+        x.value = signed ? `${v}` : (x.raw > 9n ? `${x.raw} (${hexv(x.raw)})` : `${x.raw}`);
+        x.note = signed ? `zigzag ${x.raw} → ${v}` : (x.note || '');
+        x.num = v;
+    });
+    return { fields: [...f, ...vs], vals: vs.map(x => x.num), sub };
+}
+
+function payloadFields(id, kind, pl, hints, short) {
+    if (id === SYS.SKIP && kind === K.BUF)
+        return { fields: [F('skip', 'skipped', pl, `${pl.length} bytes`, 'Cancelled reservation: never delivered, but its tsd still counts.')],
+                 sub: 'cancelled' };
+    if (short) {
+        const r = getUv(pl, 0);
+        const f = [F('pay', 'addr', pl.slice(0, r.n), hexv(r.v), 'Return address − ftrace_base. No length field.')];
+        if (id === SYS.FTRACE_CALLER) {
+            const c = getUv(pl, r.n);
+            f.push(F('pay', 'caller', pl.slice(r.n), hexv(c.v), "The caller's return address − ftrace_base."));
+        }
+        return { fields: f, sub: kind === K.MARK ? 'MARK: no timestamp' : 'NONE: with timestamp' };
+    }
+    if (kind === K.INTS) {
+        if (id === SYS.SYNC) {
+            const r = intsFields(id, pl, ['ts_abs']);
+            r.anchor = r.vals[0];
+            r.sub = 'time anchor';
+            return r;
+        }
+        if (id === SYS.LOST) {
+            const r = intsFields(id, pl, ['count', 'ts_abs', 'bytes']);
+            r.anchor = r.vals[1];
+            r.sub = `${r.vals[0]} records dropped`;
+            return r;
+        }
+        if (id === SYS.CFG) return intsFields(id, pl, ['mask_gen'], 'mask applied');
+        if (id === SYS.PANIC) return intsFields(id, pl, ['reason', 'pc'], 'final record');
+        if (id === SYS.FTRACE) {
+            const r = intsFields(id, pl, i => (i ? `a${i - 1}` : 'addr'), 'ARGS');
+            if (r.fields[1]) r.fields[1].note = 'Return address − ftrace_base.';
+            return r;
+        }
+        if (id === SYS.FTRACE_CALLER) {
+            const r = intsFields(id, pl, i => (i > 1 ? `a${i - 2}` : ['addr', 'caller'][i]), 'ARGS');
+            if (r.fields[1]) r.fields[1].note = 'Return address − ftrace_base.';
+            if (r.fields[2]) r.fields[2].note = "The caller's return address − ftrace_base.";
+            return r;
+        }
+        return intsFields(id, pl, null, `INTS · ${Math.max(0, varFields(pl, []).length - 1)} values`);
+    }
+    if (kind === K.PRINTF) {
+        const s = getUv(pl, 0);
+        if (!s) return { fields: [F('pay', 'bad', pl, 'malformed', '')] };
+        const f = [F('pay', 'site', pl.slice(0, s.n), `${s.v}`, 'Call site: format string, file, line and argument classes live in the ELF.')];
+        const cls = (hints.sites || {})[Number(s.v)];
+        let p = s.n;
+        if (!cls) {
+            if (p < pl.length) f.push(F('pay', 'args', pl.slice(p), `${pl.length - p} bytes`, 'Argument classes come from the site descriptor in the ELF.'));
+            return { fields: f, sub: 'deferred printf' };
+        }
+        cls.forEach((c, i) => {
+            let n, val;
+            if (c === AC.F32 || c === AC.F64) {
+                n = c === AC.F32 ? 4 : 8;
+                const d = new DataView(new Uint8Array(pl.slice(p, p + n)).buffer);
+                val = c === AC.F32 ? d.getFloat32(0, true) : d.getFloat64(0, true);
+            } else if (c === AC.STR) {
+                const r = getUv(pl, p);
+                const bytes = pl.slice(p + r.n, p + r.n + Number(r.v));
+                n = r.n + Number(r.v);
+                val = JSON.stringify(new TextDecoder().decode(new Uint8Array(bytes)));
+            } else {
+                const r = getUv(pl, p);
+                n = r.n;
+                val = c === AC.S32 || c === AC.S64 ? `${unzz(r.v)}` : (c === AC.PTR || c === AC.CSTR ? hexv(r.v) : `${r.v}`);
+            }
+            f.push(F('pay', `a${i}`, pl.slice(p, p + n), val, `${AC_NAME[c]}${c === AC.STR ? ': length, then the bytes' : c === AC.S32 || c === AC.S64 ? ', zigzag' : c === AC.F32 || c === AC.F64 ? ', little-endian IEEE 754' : ''}`));
+            p += n;
+        });
+        return { fields: f, sub: 'deferred printf' };
+    }
+    if (kind === K.BUF && id === SYS.INFO) return infoFields(pl);
+    if (kind === K.EXT) {
+        const names = ['ext_type', 'xfer_id', 'event', 'total', 'offset'];
+        const f = [];
+        let p = 0;
+        for (let i = 0; i < 5 && p < pl.length; i++) {
+            const r = getUv(pl, p);
+            f.push({ ...F('pay', names[i], pl.slice(p, p + r.n), i === 2 ? `${r.v} (${evName(Number(r.v))})` : `${r.v}`,
+                          i === 0 ? 'EXT type 1: FRAG, a fragment of a large buffer.' : ''), raw: r.v });
+            p += r.n;
+            if (i === 0 && r.v !== 1n) break;
+        }
+        if (p < pl.length) f.push(F('pay', 'data', pl.slice(p), `${pl.length - p} bytes`, 'Fragment data.'));
+        return { fields: f, sub: f[0] && f[0].raw === 1n ? `FRAG at offset ${f[4] ? f[4].raw : '?'}` : 'EXT' };
+    }
+    if (kind === K.STR) {
+        const t = new TextDecoder().decode(new Uint8Array(pl));
+        return { fields: [F('pay', 'text', pl, JSON.stringify(t), 'String bytes without the NUL.')], sub: 'string' };
+    }
+    const layout = kind === K.STRUCT && (hints.structs || {})[id];
+    if (layout) {
+        const f = [];
+        let p = 0;
+        for (const [nm, sz] of layout) {
+            const bytes = pl.slice(p, p + sz);
+            let v = 0n;
+            bytes.forEach((x, i) => { v |= BigInt(x) << BigInt(8 * i); });
+            f.push(F('pay', nm, bytes, nm === 'pad' ? 'compiler padding' : hexv(v), nm === 'pad' ? '' : `${sz}-byte member, native little-endian`));
+            p += sz;
+        }
+        if (p < pl.length) f.push(F('pay', 'tail', pl.slice(p), `${pl.length - p} bytes`, ''));
+        return { fields: f, sub: 'C struct' };
+    }
+    if (!pl.length) return { fields: [], sub: kind === K.MARK ? 'no time, no payload' : 'time only' };
+    return { fields: [F('pay', 'data', pl, `${pl.length} bytes`, kind === K.STRUCT ? 'Native layout of the declared C type.' : 'Raw bytes.')],
+             sub: kind === K.STRUCT ? 'C struct' : 'raw bytes' };
+}
+
+function infoFields(pl) {
+    const f = [];
+    let p = 0;
+    const take = (nm, fmt, note) => {
+        const r = getUv(pl, p);
+        if (!r || r.bad) return null;
+        f.push(F('pay', nm, pl.slice(p, p + r.n), fmt ? fmt(r.v) : `${r.v}`, note || ''));
+        p += r.n;
+        return r.v;
+    };
+    const nf = take('nfields', null, 'Fields that follow; decoders skip ones they do not know.');
+    const names = [['wire', null, 'Wire version'], ['layout', hexv, 'Shared-memory layout version'],
+                   ['flags', v => `0b${v.toString(2)}`, 'bit 0 big-endian, bit 3 global timer'],
+                   ['ts_freq', v => `${v} Hz`, 'Timer frequency'], ['ring', null, 'Ring ID'],
+                   ['epoch', null, 'Epoch of this ring'], ['size', v => `${v} B`, 'Ring data size'],
+                   ['ev_count', null, 'Highest event ID + 1'], ['ptr', v => `${v} B`, 'Pointer size'],
+                   ['site_bits', null, 'Width of PRINTF site IDs']];
+    for (const [nm, fmt, note] of names) if (p < pl.length) take(nm, fmt, note);
+    for (const nm of ['build_id', 'name']) {
+        if (p >= pl.length) break;
+        const r = getUv(pl, p);
+        const bytes = pl.slice(p + r.n, p + r.n + Number(r.v));
+        const val = nm === 'name' ? JSON.stringify(new TextDecoder().decode(new Uint8Array(bytes)))
+                                  : (bytes.length ? bytes.map(hex2).join('') : 'none');
+        f.push(F('pay', nm, pl.slice(p, p + r.n + Number(r.v)), val, nm === 'name' ? 'Length, then the instance name' : 'Length, then the GNU build ID'));
+        p += r.n + Number(r.v);
+    }
+    if (p < pl.length) take('ftrace_base', hexv, 'Added to FTRACE and FTRACE_CALLER addresses');
+    if (p < pl.length) f.push(F('pay', 'more', pl.slice(p), `${pl.length - p} bytes`, 'Fields this decoder does not know'));
+    return { fields: f, sub: `producer info · ${nf} fields` };
+}
+
+if (typeof module !== 'undefined')
+    module.exports = { K, SYS, AC, uv, zz, unzz, getUv, hdr, rec, ints, printf, sync, lost, cfg,
+                       panic, frag, info, ftrace, pad, decode, hex2, evName, KIND_NAME };
+
+/* catalog.js - one real example per encoding; expect = bytes from the producer (docs/wire-format.md). */
+function catalog(C) {
+    const u = v => ({ v: BigInt(v), signed: false }), s = v => ({ v: BigInt(v), signed: true });
+    const seq = (n, f) => Array.from({ length: n }, (_, i) => f(i));
+    const hints = { sites: { 0: [C.AC.U32, C.AC.S32], 1: [C.AC.STR, C.AC.F32, C.AC.F64], 2: [], 3: [C.AC.PTR] },
+                    structs: { 29: [['a', 4], ['b', 2], ['c', 1], ['pad', 1], ['d', 8]] } };
+    const infoBytes = C.info({ tsd: 1, wire: 1, layout: 0x200, flags: 8, freq: 1000000, ring: 7, epoch: 1002,
+                               size: 4096, evCount: 30, ptr: 8, siteBits: 16, bid: [], name: 'xt0', ftraceBase: 0 });
+    const g = [
+        ['User events', [
+            ['mark', 'EXTRACE_MARK', 'Event, no time', 'The smallest record: a 2-byte header for IDs 16–2047.',
+             C.rec(16, C.K.MARK, 0), '81 01'],
+            ['none', 'EXTRACE', 'Event and time', 'Header and timestamp delta; no length field.',
+             C.rec(17, C.K.NONE, 300), '88 01 AC 02'],
+            ['ints-small', 'EXTRACE_INTS', 'Small integers', 'Every field below 128: one byte each. −3 is zigzag-encoded.',
+             C.ints(18, 12, [u(5), s(-3)]), '92 01 0C 03 02 05 05'],
+            ['ints-wide', 'EXTRACE_INTS', 'Multi-byte value', '0x12345 needs three varint bytes.',
+             C.ints(18, 1, [u(0x12345)]), '92 01 01 04 00 C5 C6 04'],
+            ['ints-64', 'EXTRACE_INTS', '64-bit and signed', '1<<40 takes 6 bytes; −5 and −128 are zigzag-encoded.',
+             C.ints(18, 70000, [u(1n << 40n), s(-5), s(-128)]), '92 01 F0 A2 04 0A 06 80 80 80 80 80 20 09 FF 01'],
+            ['printf-int', 'EXTRACE_PRINTF', 'Deferred printf', '"q=%u st=%d": site ID, then untagged arguments.',
+             C.printf(19, 2000, 0, [{ cls: C.AC.U32, v: 7n }, { cls: C.AC.S32, v: -1n }]), '9B 01 D0 0F 03 00 07 01'],
+            ['printf-mixed', 'EXTRACE_PRINTF', 'String and floats', '"s=%s f=%f g=%g": a counted string, a float, a double.',
+             C.printf(19, 3, 1, [{ cls: C.AC.STR, v: 'abc' }, { cls: C.AC.F32, v: 1.5 }, { cls: C.AC.F64, v: -2.25 }]),
+             '9B 01 03 11 01 03 61 62 63 00 00 C0 3F 00 00 00 00 00 00 02 C0'],
+            ['printf-ptr', 'EXTRACE_PRINTF', 'Pointer argument', '"p=%p": the address as a varint.',
+             C.printf(19, 6, 3, [{ cls: C.AC.PTR, v: 0x20001000n }]), '9B 01 06 06 03 80 A0 80 80 02'],
+            ['buf', 'EXTRACE_BUF', 'Raw bytes', 'Copied as is, truncated to MAX_PAYLOAD.',
+             C.rec(20, C.K.BUF, 4, [1, 2, 3, 4, 5]), 'A4 01 04 05 01 02 03 04 05'],
+            ['str', 'EXTRACE_STR', 'String', 'The bytes without the NUL.',
+             C.rec(21, C.K.STR, 4, [...new TextEncoder().encode('hello')]), 'AE 01 04 05 68 65 6C 6C 6F'],
+            ['struct', 'EXTRACE_STRUCT', 'C struct', 'Native layout and byte order, compiler padding included.',
+             C.rec(29, C.K.STRUCT, 4, [0x44, 0x33, 0x22, 0x11, 0x66, 0x55, 0x77, 0, 8, 7, 6, 5, 4, 3, 2, 1]),
+             'ED 01 04 10 44 33 22 11 66 55 77 00 08 07 06 05 04 03 02 01'],
+        ]],
+        ['System records', [
+            ['info', 'extrace_prod_init', 'INFO', 'First record of every epoch: a counted list of fields.',
+             infoBytes, '1C 01 16 0D 01 80 04 08 C0 84 3D 07 EA 07 80 20 1E 08 10 00 03 78 74 30 00'],
+            ['sync', 'extrace_prod_init / poll', 'SYNC', 'Absolute timer value: anchors the timeline.',
+             C.sync(1004), '0A 00 03 00 EC 07'],
+            ['lost', 'after drops', 'LOST + next record', 'Written in the same reservation as the next record, which gets tsd 0.',
+             [...C.lost(5, 73536), ...C.ints(18, 0, [u(9)])], '12 00 05 00 05 C0 BE 04 92 01 00 02 00 09'],
+            ['cfg', 'extrace_prod_poll', 'CFG', 'Marks the point where a new event mask took effect.',
+             C.cfg(4, 4), '2A 04 02 00 04'],
+            ['panic', 'extrace_prod_panic', 'PANIC', 'Reason and PC, before the final flush.',
+             C.panic(8, 0xBAD, 0x08001234), '32 08 07 00 AD 17 B4 A4 80 40'],
+            ['frag', 'EXTRACE_BUF_LARGE', 'FRAG (EXT 1)', 'First of three fragments of a 1200-byte buffer.',
+             C.frag(8, 1, 20, 1200, 0, seq(506, i => i & 0xFF)), '3F 08 80 04 01 01 14 B0 09 00 00 01 02 03 04 05'],
+        ]],
+        ['Function trace', [
+            ['ft-call', 'flavor MARK', 'FTRACE: call', 'Address only, no timestamp. Base 0x20000000, return address 0x20001A47.',
+             C.ftrace(1, 0, 0x1A47), '21 C7 34'],
+            ['ft-timed', 'flavor NONE', 'FTRACE: call + time', 'Timestamp delta, then the address. No length field.',
+             C.ftrace(2, 29, 0x1A47), '20 1D C7 34'],
+            ['ft-args', 'flavor ARGS(3)', 'FTRACE: call + time + args', 'An INTS record: address, then argument registers.',
+             C.ftrace(3, 25, 0x1A47, [7, 300, 0x20004000]), '22 19 0B 00 C7 34 07 AC 02 80 80 81 80 02'],
+            ['ft-caller', 'flavor NONE | CALLER', 'FTRACE_CALLER: call + time + caller', "System event 8: the caller's return address 0x20000C13 follows the address.",
+             C.ftrace(2, 29, 0x1A47, [], 0xC13), '40 1D C7 34 93 18'],
+            ['ft-caller-args', 'flavor ARGS(1) | CALLER', 'FTRACE_CALLER: + args', 'An INTS record: address, caller, then argument registers.',
+             C.ftrace(3, 25, 0x1A47, [7], 0xC13), '42 19 06 00 C7 34 93 18 07'],
+        ]],
+        ['Padding and placement', [
+            ['pad1', 'gap of 1', 'PAD1', 'A single filler byte.', C.pad(1), '00'],
+            ['padn', 'gap of 3', 'PADN', 'Length n, then n skipped bytes that are never written.', C.pad(3), '04 01 ··'],
+            ['padn-130', 'gap of 130', 'PADN, over-long', 'No minimal varint fits 130 exactly: n = 127 in two bytes.', C.pad(130), null],
+            ['wrap', 'record meets ring end', 'Wrap', 'A 44-byte BUF finds 39 bytes before the end: they become PADN, the record starts at offset 0.',
+             [...C.pad(39), ...C.rec(20, C.K.BUF, 10, Array(40).fill(0xAB))], null],
+            ['align', 'EXTRACE_RESERVE, align 4', 'Aligned reservation', 'After a MARK at 155, three PAD1 put the payload at offset 164.',
+             [...C.rec(16, C.K.MARK, 0), 0, 0, 0, ...C.rec(22, C.K.BUF, 4, [0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7])],
+             '81 01 00 00 00 B4 01 04 08 A0 A1 A2 A3 A4 A5 A6 A7'],
+            ['cancel', 'extrace_cancel', 'Cancelled reservation', 'Cancel overwrites the 2-byte header with PAD1 and a SKIP header. tsd, len and payload stay: the record is skipped, but its tsd still counts.',
+             [0x00, 0x4C, 0x04, 0x06, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, ...C.rec(16, C.K.MARK, 0)],
+             '00 4C 04 06 55 55 55 55 55 55 81 01'],
+        ]],
+    ];
+    return { hints, groups: g.map(([title, list]) => ({ title, items: list.map(([key, api, name, note, bytes, expect]) => ({ key, api, name, note, bytes, expect })) })) };
+}
+if (typeof module !== 'undefined') module.exports = { catalog };
+
+/* sim.js - a 128-byte ring and the producer's reservation rules (wire-format §4.1, §7). */
+function makeSim(C, hints) {
+    const N = 128;
+    const u = v => ({ v: BigInt(v), signed: false }), s = v => ({ v: BigInt(v), signed: true });
+    const fresh = () => ({ mem: Array.from({ length: N }, () => null), head: 0, tail: 0, ts: 1000,
+                           lastTs: 0, lostPending: 0, lostTotal: 0, rid: 0, step: 0, notes: [] });
+
+    /* annotate bytes of one piece written at off (no wrap inside a piece) */
+    function put(st, off, bytes, label) {
+        const items = C.decode(bytes, hints);
+        let p = 0;
+        for (const it of items) {
+            for (const f of it.fields) {
+                f.bytes.forEach((b, i) => {
+                    const old = st.mem[off + p];
+                    st.mem[off + p] = {
+                        b: b === null ? (old ? old.b : null) : b, role: f.role, field: f.name,
+                        value: f.value, title: it.title, sub: it.sub, rid: st.rid, step: st.step,
+                        label, stale: b === null && !!old && old.b !== null,
+                    };
+                    p++;
+                });
+            }
+        }
+    }
+
+    /*
+     * One reservation. mk(tsd) builds the record; timed: it carries a timestamp;
+     * align/plen: aligned direct reservation of a plen-byte payload.
+     */
+    function reserve(st, label, mk, timed, align = 1, plen = 0) {
+        const lostB = st.lostPending ? C.lost(st.lostPending, st.ts) : [];
+        const tsd = timed ? (lostB.length ? 0 : (st.ts - st.lastTs) >>> 0) : 0;
+        const r = mk(tsd, st);
+        const pre = r.length - plen;
+        const fill = start => (align - ((start + lostB.length + pre) % align)) % align;
+        const off = st.head % N;
+        let start = off, k = fill(off), need = lostB.length + k + r.length, wrap = 0;
+        if (off + need > N) {
+            wrap = N - off;
+            start = 0;
+            k = fill(0);
+            need = lostB.length + k + r.length;
+        }
+        if (st.head - st.tail + wrap + need > N) {
+            st.lostPending++;
+            st.lostTotal++;
+            return { ok: false, label };
+        }
+        st.rid++;
+        if (wrap) put(st, off, C.pad(wrap), 'wrap padding');
+        put(st, start, [...lostB, ...Array(k).fill(0), ...r], label);
+        st.head += wrap + need;
+        if (timed || lostB.length) st.lastTs = st.ts;
+        st.lostPending = 0;
+        return { ok: true, label, wrap, k, lost: lostB.length > 0, size: need };
+    }
+
+    const ev = (label, dt, mk, timed = true, align, plen) => st => {
+        st.ts += dt;
+        return [reserve(st, label, mk, timed, align, plen)];
+    };
+    const many = (...fs) => st => fs.flatMap(f => f(st));
+    const consume = st => { st.tail = st.head; return [{ ok: true, label: 'consumer released' }]; };
+    const infoRec = tsd => C.info({ tsd, wire: 1, layout: 0x200, flags: 8, freq: 1000000, ring: 7,
+                                    epoch: 1002, size: N, evCount: 30, ptr: 4, siteBits: 16, bid: [],
+                                    name: 'dsp', ftraceBase: 0x20000000 });
+    const burst = st => {
+        const out = [];
+        for (let i = 0; i < 8; i++) {
+            st.ts += 40;
+            out.push(reserve(st, `EXTRACE_INTS(T_INTS, ${i}u, ${300 + i}u)`, t => C.ints(18, t, [u(i), u(300 + i)]), true));
+        }
+        return out;
+    };
+    const cancel = st => {
+        st.ts += 5;
+        const r = reserve(st, 'EXTRACE_RESERVE(T_BUF, 6) then extrace_cancel', t => C.rec(20, C.K.BUF, t, Array(6).fill(0x55)), true);
+        if (r.ok) { /* cancel: the 2-byte header becomes PAD1 and a SKIP header; the rest stays */
+            const start = (st.head - 10 + N) % N;
+            put(st, start, [0x00, 0x4C, ...st.mem.slice(start + 2, start + 10).map(x => x && x.b)], 'cancelled');
+        }
+        return [r];
+    };
+
+    const STEPS = [
+        { title: 'Start of an epoch',
+          text: 'extrace_prod_init() writes INFO, then SYNC. INFO carries the producer\'s identity; SYNC anchors the timeline with the absolute timer.',
+          act: many(st => [reserve(st, 'INFO', infoRec, true)], ev('SYNC', 1, (t, st) => C.sync(st.ts), true)) },
+        { title: 'Integers',
+          text: 'EXTRACE_INTS(T_INTS, 5u, -3), 12 ticks later. Every field is one byte: header (2), tsd, len, sign mask, two values.',
+          act: ev('EXTRACE_INTS(T_INTS, 5u, -3)', 12, t => C.ints(18, t, [u(5), s(-3)])) },
+        { title: 'Deferred printf',
+          text: 'EXTRACE_PRINTF(T_PRINTF, "q=%u st=%d", 7u, -1): only the site ID and the raw arguments. The host formats the text.',
+          act: ev('EXTRACE_PRINTF("q=%u st=%d", 7u, -1)', 2000, t => C.printf(19, t, 0, [{ cls: C.AC.U32, v: 7n }, { cls: C.AC.S32, v: -1n }])) },
+        { title: 'Function calls',
+          text: 'Three traced functions with flavors NONE, MARK and ARGS(2). The address is relative to ftrace_base 0x20000000.',
+          act: many(ev('FTRACE NONE, ret 0x20001A47', 25, t => C.ftrace(2, t, 0x1A47)),
+                    ev('FTRACE MARK, ret 0x20000C13', 3, () => C.ftrace(1, 0, 0xC13), false),
+                    ev('FTRACE ARGS, ret 0x20001A47 (7, 300)', 30, t => C.ftrace(3, t, 0x1A47, [7, 300]))) },
+        { title: 'The consumer reads',
+          text: 'The consumer releases everything published: the tail moves to the head. Old bytes stay in memory but are free space now.',
+          act: consume },
+        { title: 'A string and a buffer',
+          text: 'EXTRACE_STR(T_STR, "hello") and a 28-byte EXTRACE_BUF fill the ring towards its end.',
+          act: many(ev('EXTRACE_STR(T_STR, "hello")', 4, t => C.rec(21, C.K.STR, t, [...new TextEncoder().encode('hello')])),
+                    ev('EXTRACE_BUF(T_BUF, p, 28)', 9, t => C.rec(20, C.K.BUF, t, Array.from({ length: 28 }, (_, i) => i)))) },
+        { title: 'Wrap',
+          text: 'A 21-byte PRINTF does not fit before the ring end. The rest of the ring becomes one PADN, and the record starts at offset 0. Only the PADN header is written; the skipped bytes keep their old contents.',
+          act: ev('EXTRACE_PRINTF("s=%s f=%f", "abc", 1.5f, -2.25)', 3, t => C.printf(19, t, 1, [{ cls: C.AC.STR, v: 'abc' }, { cls: C.AC.F32, v: 1.5 }, { cls: C.AC.F64, v: -2.25 }])) },
+        { title: 'Aligned reservation',
+          text: 'EXTRACE_RESERVE(T_ANY, 8, 8): PAD1 fillers put the payload on an 8-byte boundary, so it can be written in place as typed data.',
+          act: ev('EXTRACE_RESERVE(T_ANY, 8, 8)', 6, t => C.rec(22, C.K.BUF, t, [0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7]), true, 8, 8) },
+        { title: 'Ring full',
+          text: 'Eight more records arrive while the consumer is away. The ring fills up; the records that do not fit are dropped and counted, nothing waits.',
+          act: burst },
+        { title: 'The consumer reads again',
+          text: 'The tail catches up with the head. The drops are still pending.',
+          act: consume },
+        { title: 'LOST report',
+          text: 'The next record carries the pending drops: one reservation holds a LOST record (count, absolute time) followed by the record itself, which gets tsd 0.',
+          act: ev('EXTRACE_INTS(T_INTS, 9u)', 50, t => C.ints(18, t, [u(9)])) },
+        { title: 'Cancelled reservation',
+          text: 'A direct reservation is cancelled: its header becomes PAD1 and a SKIP header. The record is skipped, but its tsd keeps the timeline right for the records after it. A MARK follows.',
+          act: many(cancel, ev('EXTRACE_MARK(T_MARK)', 0, () => C.rec(16, C.K.MARK, 0), false)) },
+    ];
+
+    /* state after steps 0..n */
+    function run(n) {
+        const st = fresh();
+        const log = [];
+        for (let i = 0; i <= n && i < STEPS.length; i++) {
+            st.step = i;
+            log.push(STEPS[i].act(st));
+        }
+        return { st, log };
+    }
+    return { N, STEPS, run };
+}
+if (typeof module !== 'undefined') module.exports = { makeSim };
+
+/* app.js - rendering and interaction. All text goes in through textContent. */
+(function () {
+    const C = { K, SYS, AC, uv, zz, unzz, getUv, hdr, rec, ints, printf, sync, lost, cfg, panic, frag,
+                info, ftrace, pad, decode, hex2, evName, KIND_NAME };
+    const CAT = catalog(C);
+    const SIM = makeSim(C, CAT.hints);
+    const ROLE = { hdr: 'Header', frame: 'Framing', pay: 'Payload', pad: 'Padding', skip: 'Skipped' };
+    const ROLE_VAR = { hdr: '--hdr', frame: '--frame', pay: '--pay', pad: '--pad', skip: '--axis' };
+    const $ = id => document.getElementById(id);
+    function el(tag, cls, text) {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (text !== undefined && text !== null) e.textContent = text;
+        return e;
+    }
+    const hexs = bytes => bytes.map(hex2).join(' ');
+
+    /* ---- tooltip ---- */
+    const tip = $('tip');
+    const tipData = new WeakMap();
+    function showTip(target, x, y) {
+        const d = tipData.get(target);
+        if (!d) return;
+        tip.replaceChildren();
+        tip.append(el('div', 'v', d.value));
+        for (const k of d.keys || []) {
+            const row = el('div', 'k');
+            const line = el('i');
+            line.style.background = `var(${ROLE_VAR[k.role] || '--axis'})`;
+            row.append(line, el('span', null, k.text));
+            tip.append(row);
+        }
+        if (d.bytes) tip.append(el('div', 'b', d.bytes));
+        if (d.note) tip.append(el('div', 'n', d.note));
+        tip.hidden = false;
+        place(target, x, y);
+    }
+    function place(target, x, y) {
+        const r = target.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+        let left = x !== undefined ? x + 14 : r.left, top = y !== undefined ? y + 18 : r.bottom + 8;
+        if (left + w > innerWidth - 8) left = Math.max(8, (x !== undefined ? x - 14 : r.right) - w);
+        if (top + h > innerHeight - 8) top = Math.max(8, (y !== undefined ? y - 12 : r.top - 8) - h);
+        tip.style.left = `${left}px`;
+        tip.style.top = `${top}px`;
+    }
+    function hideTip() { tip.hidden = true; }
+    let hot = null;
+    function setHot(t) {
+        if (hot) hot.forEach(x => x.classList.remove('hot'));
+        hot = t;
+        if (hot) hot.forEach(x => x.classList.add('hot'));
+    }
+    function bindTips(root, group) {
+        root.addEventListener('pointermove', e => {
+            const t = e.target.closest('[data-tip]');
+            if (!t || !root.contains(t)) { hideTip(); setHot(null); return; }
+            showTip(t, e.clientX, e.clientY);
+            setHot(group ? group(t) : [t]);
+        });
+        root.addEventListener('pointerleave', () => { hideTip(); setHot(null); });
+        root.addEventListener('focusin', e => {
+            const t = e.target.closest('[data-tip]');
+            if (t) { showTip(t); setHot(group ? group(t) : [t]); }
+        });
+        root.addEventListener('focusout', () => { hideTip(); setHot(null); });
+    }
+    addEventListener('scroll', hideTip, { passive: true });
+    addEventListener('keydown', e => { if (e.key === 'Escape') hideTip(); });
+
+    /* ---- byte strips ---- */
+    function fieldTip(f, item) {
+        const shown = f.bytes.map(hex2).join(' ');
+        return {
+            value: f.value === null || f.value === undefined ? f.name : String(f.value),
+            keys: [{ role: f.role, text: `${ROLE[f.role]} · ${f.name}${item ? ' · ' + item.title : ''}` }],
+            bytes: `${f.bytes.length} byte${f.bytes.length === 1 ? '' : 's'}: ${shown.length > 120 ? shown.slice(0, 117) + '…' : shown}`,
+            note: f.note || '',
+        };
+    }
+    function stripOf(items, opts = {}) {
+        const max = opts.max || 12;
+        const box = el('div', 'strip' + (opts.nowrap ? ' nowrap' : ''));
+        const recs = el('div', 'recs');
+        for (const it of items) {
+            const r = el('div', 'rec');
+            if (!opts.noCap) {
+                const cap = el('div', 'rec-cap');
+                cap.append(el('b', null, it.title), document.createTextNode(` ${it.sub ? '· ' + it.sub + ' ' : ''}· ${it.len} B`));
+                r.append(cap);
+            }
+            const fl = el('div', 'fields');
+            for (const f of it.fields) {
+                if (!f.bytes.length) continue;
+                const g = el('div', 'fld');
+                g.dataset.role = f.role;
+                g.dataset.tip = '1';
+                g.tabIndex = 0;
+                const t = fieldTip(f, it);
+                tipData.set(g, t);
+                g.setAttribute('aria-label', `${f.name}: ${t.value}. ${t.bytes}`);
+                const cells = el('div', 'cells');
+                const n = f.bytes.length, show = n > max ? max - 1 : n;
+                for (let i = 0; i < show; i++) cells.append(el('span', 'c', hex2(f.bytes[i])));
+                if (n > show) cells.append(el('span', 'c more', `+${n - show}`));
+                g.append(cells, el('span', 'lab', f.name));
+                fl.append(g);
+            }
+            r.append(fl);
+            recs.append(r);
+        }
+        box.append(recs);
+        return box;
+    }
+    function fieldTable(items) {
+        const wrap = el('div', 'tbl'), t = el('table');
+        const hr = el('tr');
+        ['Field', 'Role', 'Bytes', 'Value'].forEach(h => hr.append(el('th', null, h)));
+        { const th = el('thead'); th.append(hr); t.append(th); }
+        const tb = el('tbody');
+        for (const it of items) for (const f of it.fields) {
+            if (!f.bytes.length) continue;
+            const tr = el('tr');
+            const shown = hexs(f.bytes);
+            tr.append(el('td', null, `${it.title} · ${f.name}`), el('td', null, ROLE[f.role]),
+                      el('td', 'mono', shown.length > 60 ? shown.slice(0, 57) + '…' : shown),
+                      el('td', 'mono', f.value === null || f.value === undefined ? '' : String(f.value)));
+            tb.append(tr);
+        }
+        t.append(tb);
+        wrap.append(t);
+        return wrap;
+    }
+
+    /* ---- catalog ---- */
+    function renderCatalog() {
+        const root = $('cat');
+        for (const g of CAT.groups) {
+            root.append(el('div', 'group-title', g.title));
+            const cards = el('div', 'cards');
+            for (const it of g.items) {
+                const items = decode(it.bytes, CAT.hints);
+                const card = el('article', 'card');
+                const head = el('div', 'card-head');
+                const nm = el('div');
+                nm.append(el('h3', null, it.name), el('div', 'api', it.api));
+                head.append(nm, el('div', 'size', `${it.bytes.length} B`));
+                const ft = el('details', 'ft');
+                ft.append(el('summary', null, 'Field table'), fieldTable(items));
+                card.append(head, el('p', 'note', it.note), stripOf(items), ft);
+                cards.append(card);
+            }
+            root.append(cards);
+        }
+        bindTips(root, t => [t]);
+    }
+
+    /* ---- sizes chart ---- */
+    function sizeRows() {
+        const rows = [];
+        CAT.groups.slice(0, 3).forEach(g => {
+            rows.push({ group: g.title });
+            g.items.filter(it => it.key !== 'frag').forEach(it => {
+                const s = { hdr: 0, frame: 0, pay: 0 };
+                decode(it.bytes, CAT.hints).forEach(x => x.fields.forEach(f => { if (s[f.role] !== undefined) s[f.role] += f.bytes.length; }));
+                rows.push({ name: it.name, s, total: s.hdr + s.frame + s.pay });
+            });
+        });
+        return rows;
+    }
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    function sv(tag, attrs, text) {
+        const e = document.createElementNS(SVGNS, tag);
+        for (const k in attrs) e.setAttribute(k, attrs[k]);
+        if (text !== undefined) e.textContent = text;
+        return e;
+    }
+    function renderSizes() {
+        const box = $('sizes-chart'), rows = sizeRows();
+        const W = box.clientWidth || 600, narrow = W < 560;
+        const labelW = narrow ? 0 : 200, tipW = 44, rowH = narrow ? 40 : 28, groupH = 30, axisH = 26;
+        const max = 25, x0 = labelW, x1 = W - tipW, sx = v => x0 + (x1 - x0) * v / max;
+        let h = 0;
+        rows.forEach(r => { h += r.group ? groupH : rowH; });
+        const svg = sv('svg', { viewBox: `0 0 ${W} ${h + axisH}`, height: h + axisH, role: 'img',
+                                'aria-label': 'Bytes per record by field role. The table view lists every value.' });
+        for (let v = 0; v <= max; v += 5) {
+            svg.append(sv('line', { x1: sx(v), x2: sx(v), y1: 0, y2: h, stroke: 'var(--rule)', 'stroke-width': 1 }));
+            svg.append(sv('text', { x: sx(v), y: h + 17, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--muted)' }, v === max ? `${v} bytes` : `${v}`));
+        }
+        svg.append(sv('line', { x1: x0, x2: x0, y1: 0, y2: h, stroke: 'var(--axis)', 'stroke-width': 1 }));
+        let y = 0;
+        for (const r of rows) {
+            if (r.group) {
+                svg.append(sv('text', { x: 0, y: y + 21, 'font-size': 11, 'font-weight': 600, 'letter-spacing': '0.06em', fill: 'var(--muted)' }, r.group.toUpperCase()));
+                y += groupH;
+                continue;
+            }
+            const g = sv('g', { tabindex: 0, class: 'seg-row', 'data-tip': '1',
+                                'aria-label': `${r.name}: ${r.total} bytes; header ${r.s.hdr}, framing ${r.s.frame}, payload ${r.s.pay}` });
+            const by = narrow ? y + 18 : y + 6, bh = 16;
+            g.append(sv('rect', { x: 0, y, width: W, height: rowH, fill: 'transparent' }));
+            g.append(sv('text', { x: narrow ? x0 : 0, y: narrow ? y + 12 : y + 18, 'font-size': 13, fill: 'var(--ink-2)' }, r.name));
+            const segs = ['hdr', 'frame', 'pay'].filter(k => r.s[k]);
+            let acc = 0;
+            segs.forEach((k, i) => {
+                const a = sx(acc) + (i ? 1 : 0), last = i === segs.length - 1;
+                acc += r.s[k];
+                const b = sx(acc) - (last ? 0 : 1), w = Math.max(1, b - a), rr = last ? Math.min(4, w) : 0;
+                const d = `M${a},${by} H${b - rr} Q${b},${by} ${b},${by + rr} V${by + bh - rr} Q${b},${by + bh} ${b - rr},${by + bh} H${a} Z`;
+                g.append(sv('path', { d, fill: `var(${ROLE_VAR[k]})`, class: 'seg' }));
+            });
+            g.append(sv('text', { x: sx(r.total) + 6, y: by + 12, 'font-size': 12, fill: 'var(--ink-2)', 'font-family': 'var(--f-mono)' }, `${r.total}`));
+            tipData.set(g, { value: `${r.total} bytes`, keys: segs.map(k => ({ role: k, text: `${ROLE[k]} ${r.s[k]} B` })), note: r.name });
+            svg.append(g);
+            y += rowH;
+        }
+        box.replaceChildren(svg);
+        /* table view */
+        const t = el('table'), hr = el('tr');
+        [['Record'], ['Header', 1], ['Framing', 1], ['Payload', 1], ['Total', 1]].forEach(([n, num]) => hr.append(el('th', num ? 'num' : null, n)));
+        { const th = el('thead'); th.append(hr); t.append(th); }
+        const tb = el('tbody');
+        rows.filter(r => !r.group).forEach(r => {
+            const tr = el('tr');
+            tr.append(el('td', null, r.name), el('td', 'num', r.s.hdr), el('td', 'num', r.s.frame), el('td', 'num', r.s.pay), el('td', 'num', r.total));
+            tb.append(tr);
+        });
+        t.append(tb);
+        $('sizes-table').replaceChildren(t);
+    }
+    $('sizes-toggle').addEventListener('click', e => {
+        const tbl = $('sizes-table'), open = tbl.hidden;
+        tbl.hidden = !open;
+        e.currentTarget.textContent = open ? 'Hide table' : 'Show table';
+        e.currentTarget.setAttribute('aria-expanded', String(open));
+    });
+    bindTips($('sizes-chart'));
+    let rsz;
+    new ResizeObserver(() => { clearTimeout(rsz); rsz = setTimeout(renderSizes, 60); }).observe($('sizes-chart'));
+
+    /* ---- ring ---- */
+    let step = 0, timer = null;
+    const grid = $('r-grid'), cells = [];
+    for (let row = 0; row < 8; row++) {
+        grid.append(el('div', 'ofs', `0x${(row * 16).toString(16).toUpperCase().padStart(2, '0')}`));
+        for (let c = 0; c < 16; c++) {
+            const d = el('div', 'rc');
+            d.dataset.tip = '1';
+            d.setAttribute('role', 'gridcell');
+            cells.push(d);
+            grid.append(d);
+        }
+    }
+    function renderRing() {
+        const { st, log } = SIM.run(step), N = SIM.N, S = SIM.STEPS[step];
+        $('r-step').textContent = `Step ${step + 1} of ${SIM.STEPS.length}`;
+        $('r-title').textContent = S.title;
+        $('r-text').textContent = S.text;
+        $('r-prev').disabled = step === 0;
+        $('r-next').disabled = step === SIM.STEPS.length - 1;
+        const used = st.head - st.tail, t = st.tail % N, h = st.head % N;
+        cells.forEach((d, i) => {
+            const m = st.mem[i];
+            d.className = 'rc';
+            d.removeAttribute('data-role');
+            if (!m) {
+                d.classList.add('empty');
+                d.textContent = '··';
+                tipData.set(d, { value: 'never written', keys: [], note: `offset ${i}` });
+            } else {
+                d.dataset.role = m.role;
+                d.textContent = hex2(m.b);
+                const inWin = (i - t + N) % N < used;
+                if (!inWin) d.classList.add('free');
+                if (m.step === step) d.classList.add('new');
+                tipData.set(d, {
+                    value: m.value === null || m.value === undefined ? m.field : String(m.value),
+                    keys: [{ role: m.role, text: `${ROLE[m.role]} · ${m.field} · ${m.title}` }],
+                    bytes: `offset ${i} (0x${i.toString(16).toUpperCase()}): ${hex2(m.b)}${m.stale ? ' (stale, skipped)' : ''}`,
+                    note: `${m.label}${inWin ? '' : ' · released'}`,
+                });
+                d.dataset.rid = m.rid;
+            }
+            d.setAttribute('aria-label', `offset ${i}: ${d.textContent}`);
+            if (i === h) d.classList.add('head');
+            if (i === t) d.classList.add('tail');
+        });
+        const chips = $('r-chips');
+        chips.replaceChildren();
+        for (const r of log[step]) {
+            const txt = r.label === 'consumer released' ? 'tail → head' :
+                r.ok ? `${r.label} · ${r.size} B${r.wrap ? ` · wrap pad ${r.wrap} B` : ''}${r.k ? ` · ${r.k}× PAD1` : ''}${r.lost ? ' · with LOST' : ''}` : `${r.label} · dropped`;
+            chips.append(el('span', 'chip' + (r.ok ? '' : ' drop'), txt));
+        }
+        const stats = $('r-stats');
+        stats.replaceChildren();
+        [['head', `${st.head} (offset ${h})`], ['tail', `${st.tail} (offset ${t})`], ['unread', `${used} B`],
+         ['free', `${N - used} B`], ['lost_pending', st.lostPending], ['dropped in total', st.lostTotal]].forEach(([k, v]) => {
+            const s = el('span');
+            s.append(document.createTextNode(`${k} `), el('b', null, String(v)));
+            stats.append(s);
+        });
+    }
+    const go = n => { step = Math.max(0, Math.min(SIM.STEPS.length - 1, n)); renderRing(); };
+    function stopPlay() { clearInterval(timer); timer = null; $('r-play').textContent = 'Play'; }
+    $('r-prev').addEventListener('click', () => { stopPlay(); go(step - 1); });
+    $('r-next').addEventListener('click', () => { stopPlay(); go(step + 1); });
+    $('r-reset').addEventListener('click', () => { stopPlay(); go(0); });
+    $('r-play').addEventListener('click', () => {
+        if (timer) return stopPlay();
+        if (step === SIM.STEPS.length - 1) go(0);
+        $('r-play').textContent = 'Pause';
+        timer = setInterval(() => { if (step >= SIM.STEPS.length - 1) stopPlay(); else go(step + 1); }, 1800);
+    });
+    bindTips(grid, t => (t.dataset.rid ? cells.filter(c => c.dataset.rid === t.dataset.rid) : [t]));
+
+    /* ---- number parsing ---- */
+    function parseNum(s, what, { signed = false, max = 1n << 64n } = {}) {
+        s = String(s).trim().replace(/_/g, '');
+        let m = s.match(/^(\d+)\s*<<\s*(\d+)$/), v;
+        if (m) v = BigInt(m[1]) << BigInt(m[2]);
+        else if (/^-?(0x[0-9a-f]+|\d+)$/i.test(s)) v = s.startsWith('-') ? -BigInt(s.slice(1)) : BigInt(s);
+        else throw new Error(`${what}: "${s}" is not a number`);
+        if (v < 0n && !signed) throw new Error(`${what} cannot be negative`);
+        if (v >= max || v < -(max >> 1n)) throw new Error(`${what} is out of range`);
+        return v;
+    }
+    const hexBytes = s => {
+        const t = s.replace(/0x/gi, '').replace(/[^0-9a-f]/gi, '');
+        if (t.length % 2) throw new Error('Odd number of hex digits');
+        return Array.from({ length: t.length / 2 }, (_, i) => parseInt(t.substr(i * 2, 2), 16));
+    };
+    const evId = v => {
+        const n = Number(parseNum(v, 'Event ID', { max: 65535n }));
+        if (n < 16) throw new Error('User event IDs start at 16 (0–15 are system events)');
+        return n;
+    };
+    const tsdOf = v => parseNum(v, 'Timestamp delta', { max: 1n << 32n });
+    const u32 = (v, w) => parseNum(v, w, { max: 1n << 32n });
+
+    /* ---- builder ---- */
+    const BT = [
+        { k: 'mark', l: 'MARK: event, no time', f: [['id', 'Event ID', '16']], b: v => ({ bytes: rec(evId(v.id), K.MARK, 0) }) },
+        { k: 'none', l: 'NONE: event and time', f: [['id', 'Event ID', '17'], ['tsd', 'Timestamp delta', '300']],
+          b: v => ({ bytes: rec(evId(v.id), K.NONE, tsdOf(v.tsd)) }) },
+        { k: 'ints', l: 'INTS: integers', f: [['id', 'Event ID', '18'], ['tsd', 'Timestamp delta', '12'], ['vals', 'Values (5u, -3, 7s, 1<<40)', '5u, -3', 260]],
+          b: v => {
+              const vals = v.vals.split(',').map(x => x.trim()).filter(Boolean).map((x, i) => {
+                  const m = x.match(/^(.*?)([us])?$/i), signed = (m[2] || '').toLowerCase() === 's' || m[1].trim().startsWith('-');
+                  if ((m[2] || '').toLowerCase() === 'u' && m[1].trim().startsWith('-')) throw new Error(`Value ${i}: an unsigned value cannot be negative`);
+                  return { v: parseNum(m[1], `Value ${i}`, { signed }), signed };
+              });
+              if (!vals.length || vals.length > 16) throw new Error('INTS takes 1 to 16 values');
+              return { bytes: ints(evId(v.id), tsdOf(v.tsd), vals) };
+          } },
+        { k: 'printf', l: 'PRINTF: deferred printf', f: [['id', 'Event ID', '19'], ['tsd', 'Timestamp delta', '2000'], ['site', 'Site ID', '0'],
+                                                          ['args', 'Arguments (u:7, s:-1, str:abc, f32:1.5, f64:2.25, ptr:0x2000)', 'u:7, s:-1', 320]],
+          b: v => {
+              const map = { u: AC.U32, s: AC.S32, u64: AC.U64, s64: AC.S64, f32: AC.F32, f64: AC.F64, str: AC.STR, ptr: AC.PTR, cstr: AC.CSTR };
+              const args = v.args.split(',').map(x => x.trim()).filter(Boolean).map((x, i) => {
+                  const m = x.match(/^([a-z0-9]+):(.*)$/i);
+                  if (!m || !map[m[1].toLowerCase()]) throw new Error(`Argument ${i}: write type:value, e.g. u:7`);
+                  const cls = map[m[1].toLowerCase()], raw = m[2].trim();
+                  if (cls === AC.STR) return { cls, v: raw };
+                  if (cls === AC.F32 || cls === AC.F64) {
+                      if (raw === '' || isNaN(Number(raw))) throw new Error(`Argument ${i}: "${raw}" is not a number`);
+                      return { cls, v: Number(raw) };
+                  }
+                  const sgn = cls === AC.S32 || cls === AC.S64, wide = cls === AC.U64 || cls === AC.S64;
+                  return { cls, v: parseNum(raw, `Argument ${i}`, { signed: sgn, max: wide ? 1n << 64n : 1n << 32n }) };
+              });
+              if (args.length > 16) throw new Error('At most 16 arguments');
+              const site = Number(u32(v.site, 'Site ID'));
+              return { bytes: printf(evId(v.id), tsdOf(v.tsd), site, args), hints: { sites: { [site]: args.map(a => a.cls) } } };
+          } },
+        { k: 'buf', l: 'BUF: raw bytes', f: [['id', 'Event ID', '20'], ['tsd', 'Timestamp delta', '4'], ['data', 'Bytes (hex)', '01 02 03 04 05', 220]],
+          b: v => ({ bytes: rec(evId(v.id), K.BUF, tsdOf(v.tsd), hexBytes(v.data)) }) },
+        { k: 'str', l: 'STR: string', f: [['id', 'Event ID', '21'], ['tsd', 'Timestamp delta', '4'], ['text', 'Text', 'hello', 220]],
+          b: v => ({ bytes: rec(evId(v.id), K.STR, tsdOf(v.tsd), [...new TextEncoder().encode(v.text)]) }) },
+        { k: 'struct', l: 'STRUCT: C struct bytes', f: [['id', 'Event ID', '29'], ['tsd', 'Timestamp delta', '4'], ['data', 'Bytes (hex, native layout)', '44 33 22 11 66 55 77 00', 260]],
+          b: v => ({ bytes: rec(evId(v.id), K.STRUCT, tsdOf(v.tsd), hexBytes(v.data)) }) },
+        { k: 'ftrace', l: 'FTRACE: function entry', f: [['mode', 'Flavor', 'NONE', 0, ['MARK', 'NONE', 'ARGS']], ['ret', 'Return address', '0x20001A47'],
+                                                         ['base', 'ftrace_base', '0x20000000'], ['tsd', 'Timestamp delta', '29'], ['args', 'Argument registers (ARGS)', '7, 300', 160],
+                                                         ['caller', "Caller's return address (empty: not a CALLER flavor)", '', 160]],
+          b: v => {
+              const ret = u32(v.ret, 'Return address'), base = u32(v.base, 'ftrace_base');
+              const mode = { MARK: 1, NONE: 2, ARGS: 3 }[v.mode];
+              const args = mode === 3 ? v.args.split(',').map(x => x.trim()).filter(Boolean).map((x, i) => u32(x, `Register a${i}`)) : [];
+              if (args.length > 8) throw new Error('At most 8 argument registers (a0–a7)');
+              const caller = v.caller.trim() ? (u32(v.caller, "Caller's return address") - base) & 0xFFFFFFFFn : null;
+              return { bytes: ftrace(mode, tsdOf(v.tsd), (ret - base) & 0xFFFFFFFFn, args, caller) };
+          } },
+        { k: 'sync', l: 'SYNC: time anchor', f: [['ts', 'Absolute timer', '1004']], b: v => ({ bytes: sync(u32(v.ts, 'Timer')) }) },
+        { k: 'lost', l: 'LOST: drop report', f: [['count', 'Dropped records', '5'], ['ts', 'Absolute timer', '73536']],
+          b: v => ({ bytes: lost(u32(v.count, 'Count'), u32(v.ts, 'Timer')) }) },
+        { k: 'cfg', l: 'CFG: mask applied', f: [['tsd', 'Timestamp delta', '4'], ['gen', 'Mask generation', '4']],
+          b: v => ({ bytes: cfg(tsdOf(v.tsd), u32(v.gen, 'Generation')) }) },
+        { k: 'panic', l: 'PANIC', f: [['tsd', 'Timestamp delta', '8'], ['reason', 'Reason', '0xBAD'], ['pc', 'PC', '0x08001234']],
+          b: v => ({ bytes: panic(tsdOf(v.tsd), u32(v.reason, 'Reason'), u32(v.pc, 'PC')) }) },
+        { k: 'frag', l: 'FRAG: fragment of a large buffer', f: [['tsd', 'Timestamp delta', '8'], ['xfer', 'Transfer ID', '1'], ['id', 'Event ID', '20'],
+                                                                 ['total', 'Total length', '1200'], ['off', 'Offset', '0'], ['n', 'Fragment bytes', '24']],
+          b: v => {
+              const n = Number(parseNum(v.n, 'Fragment bytes', { max: 65536n }));
+              return { bytes: frag(tsdOf(v.tsd), u32(v.xfer, 'Transfer ID'), evId(v.id), u32(v.total, 'Total'), u32(v.off, 'Offset'), Array.from({ length: n }, (_, i) => i & 0xFF)) };
+          } },
+        { k: 'pad', l: 'Padding: a gap of n bytes', f: [['gap', 'Gap (bytes)', '130']],
+          b: v => {
+              const g = Number(parseNum(v.gap, 'Gap', { max: 1n << 20n }));
+              if (g < 1) throw new Error('A gap is at least 1 byte');
+              return { bytes: pad(g) };
+          } },
+    ];
+    const form = $('b-form'), out = $('b-out');
+    let cur = BT[2];
+    const typeSel = el('select');
+    typeSel.id = 'b-type';
+    BT.forEach(t => { const o = el('option', null, t.l); o.value = t.k; typeSel.append(o); });
+    typeSel.value = cur.k;
+    function buildForm() {
+        form.replaceChildren();
+        const lt = el('label', 'f', 'Record type');
+        lt.htmlFor = 'b-type';
+        lt.append(typeSel);
+        form.append(lt);
+        for (const [k, l, d, w, opts] of cur.f) {
+            const lab = el('label', 'f', l), id = `b-${cur.k}-${k}`;
+            lab.htmlFor = id;
+            let inp;
+            if (opts) {
+                inp = el('select');
+                opts.forEach(o => { const e = el('option', null, o); e.value = o; inp.append(e); });
+            } else {
+                inp = el('input');
+                inp.spellcheck = false;
+                inp.style.width = `${w || 120}px`;
+                inp.style.maxWidth = '100%';
+            }
+            inp.id = id;
+            inp.value = d;
+            inp.dataset.k = k;
+            inp.addEventListener('input', renderBuild);
+            lab.append(inp);
+            form.append(lab);
+        }
+        renderBuild();
+    }
+    typeSel.addEventListener('change', () => { cur = BT.find(t => t.k === typeSel.value); buildForm(); });
+    function renderBuild() {
+        const v = {};
+        form.querySelectorAll('[data-k]').forEach(i => { v[i.dataset.k] = i.value; });
+        out.replaceChildren();
+        let r;
+        try { r = cur.b(v); } catch (e) { out.append(el('p', 'err', e.message)); return; }
+        const hints = { sites: { ...CAT.hints.sites, ...((r.hints || {}).sites || {}) }, structs: CAT.hints.structs };
+        const items = decode(r.bytes, hints);
+        const meta = el('div', 'out-meta');
+        const written = r.bytes.filter(x => x !== null).length;
+        meta.append(el('span', null, `${r.bytes.length} bytes${written < r.bytes.length ? `, ${written} written` : ''}`));
+        const copy = el('button', null, 'Copy hex');
+        copy.type = 'button';
+        const hexText = r.bytes.filter(x => x !== null).map(hex2).join(' ');
+        copy.addEventListener('click', () => {
+            navigator.clipboard.writeText(hexText).then(() => { copy.textContent = 'Copied'; setTimeout(() => { copy.textContent = 'Copy hex'; }, 1400); },
+                () => { const s = getSelection(), rg = document.createRange(); rg.selectNodeContents(line); s.removeAllRanges(); s.addRange(rg); copy.textContent = 'Press Ctrl+C'; });
+        });
+        meta.append(copy);
+        const line = el('div', 'hexline', hexText + (written < r.bytes.length ? ` (+${r.bytes.length - written} skipped bytes, not written)` : ''));
+        out.append(meta, line, stripOf(items, { max: 24 }), fieldTable(items));
+    }
+    bindTips(out);
+    buildForm();
+
+    /* ---- decoder ---- */
+    const sampleKeys = ['info', 'sync', 'ints-small', 'printf-int', 'ft-timed', 'ft-call', 'ft-args', 'str', 'cfg', 'lost', 'pad1', 'align'];
+    const all = CAT.groups.flatMap(g => g.items);
+    const sample = sampleKeys.flatMap(k => all.find(i => i.key === k).bytes).filter(b => b !== null);
+    const din = $('d-in'), dout = $('d-out');
+    function runDecode() {
+        dout.replaceChildren();
+        let bytes;
+        try { bytes = hexBytes(din.value); } catch (e) { dout.append(el('p', 'err', e.message)); return; }
+        if (!bytes.length) { dout.append(el('p', 'small', 'Paste some hex bytes, or load the sample.')); return; }
+        const items = decode(bytes, CAT.hints);
+        for (const it of items) {
+            const row = el('div', 'decrow');
+            const at = el('div', 'at', `@${it.off}`);
+            if (it.kind === 'rec' && it.timed && it.ts !== null) at.append(el('br'), document.createTextNode(`t ${it.ts}`));
+            const body = el('div');
+            if (it.kind === 'err') body.append(el('p', 'err', `${it.sub} (offset ${it.off}).`));
+            body.append(stripOf([it], { max: 20 }));
+            row.append(at, body);
+            dout.append(row);
+        }
+        const n = items.filter(i => i.kind === 'rec').length, p = items.filter(i => i.kind === 'pad').reduce((a, i) => a + i.len, 0);
+        dout.prepend(el('p', 'small', `${bytes.length} bytes: ${n} record${n === 1 ? '' : 's'}, ${p} bytes of padding${items.some(i => i.kind === 'err') ? ', then a decode error' : ''}.`));
+    }
+    $('d-go').addEventListener('click', runDecode);
+    $('d-sample').addEventListener('click', () => { din.value = hexs(sample); runDecode(); });
+    $('d-clear').addEventListener('click', () => { din.value = ''; dout.replaceChildren(); din.focus(); });
+    din.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runDecode(); });
+    bindTips(dout);
+    din.value = hexs(sample);
+
+    /* ---- varints ---- */
+    function renderVarint() {
+        const o = $('v-out');
+        o.replaceChildren();
+        let v;
+        try { v = parseNum($('v-in').value, 'Value', { signed: true }); } catch (e) { o.append(el('p', 'err', e.message)); return; }
+        const z = v < 0n ? zz(v) : v, bytes = uv(z);
+        const head = el('p', null, v < 0n ? `zigzag(${v}) = ${z}, ` : '');
+        head.append(document.createTextNode(`${bytes.length} byte${bytes.length > 1 ? 's' : ''}: `), el('code', null, hexs(bytes)));
+        const vb = el('div', 'vbytes');
+        vb.style.marginTop = '12px';
+        bytes.forEach((b, i) => {
+            const box = el('div', 'vbyte'), bits = el('div', 'bits');
+            for (let k = 7; k >= 0; k--) bits.append(el('span', 'bit' + (k === 7 ? ' cont' : ''), String((b >> k) & 1)));
+            box.append(bits, el('span', 'h', hex2(b)), el('span', 's', `bits ${7 * i}–${7 * i + 6}${b & 0x80 ? ', more' : ', last'}`));
+            vb.append(box);
+        });
+        const key = el('div', 'legend');
+        key.style.marginTop = '10px';
+        const k1 = el('span', 'key'), s1 = el('span', 'sw frame'), k2 = el('span', 'key'), s2 = el('span', 'sw pay');
+        k1.append(s1, document.createTextNode('continuation bit: another byte follows'));
+        k2.append(s2, document.createTextNode('7 value bits, lowest group first'));
+        key.append(k1, k2);
+        o.append(head, vb, key);
+    }
+    $('v-in').addEventListener('input', renderVarint);
+
+    renderCatalog();
+    renderSizes();
+    renderRing();
+    renderVarint();
+    runDecode();
+})();
+
+</script>
+</body>
+</html>

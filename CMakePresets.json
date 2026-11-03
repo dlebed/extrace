@@ -1,0 +1,63 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+    "configurePresets": [
+        {
+            "name": "dev",
+            "displayName": "Host, POSIX port, -O0 -g",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "test",
+            "displayName": "Unit tests with ASan + UBSan",
+            "inherits": "dev",
+            "cacheVariables": {
+                "EXTRACE_SANITIZE": "address,undefined",
+                "EXTRACE_WERROR": "ON"
+            }
+        },
+        {
+            "name": "tsan",
+            "displayName": "Concurrency tests with ThreadSanitizer",
+            "inherits": "dev",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "EXTRACE_SANITIZE": "thread"
+            }
+        },
+        {
+            "name": "coverage",
+            "displayName": "Coverage (gcc --coverage)",
+            "inherits": "dev",
+            "cacheVariables": { "EXTRACE_COVERAGE": "ON" }
+        },
+        {
+            "name": "release-check",
+            "displayName": "Optimized build of the test suite",
+            "inherits": "dev",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "EXTRACE_WERROR": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        { "name": "dev", "configurePreset": "dev" },
+        { "name": "test", "configurePreset": "test" },
+        { "name": "tsan", "configurePreset": "tsan" },
+        { "name": "coverage", "configurePreset": "coverage" },
+        { "name": "release-check", "configurePreset": "release-check" }
+    ],
+    "testPresets": [
+        { "name": "dev", "configurePreset": "dev", "output": { "outputOnFailure": true } },
+        { "name": "test", "configurePreset": "test", "output": { "outputOnFailure": true } },
+        { "name": "tsan", "configurePreset": "tsan", "output": { "outputOnFailure": true } },
+        { "name": "coverage", "configurePreset": "coverage", "output": { "outputOnFailure": true } },
+        { "name": "release-check", "configurePreset": "release-check", "output": { "outputOnFailure": true } }
+    ]
+}

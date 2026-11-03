@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="406" viewBox="0 0 880 406" role="img" aria-label="Instructions per trace event">
+<title>Instructions per trace event</title>
+<rect x="0.5" y="0.5" width="879" height="405" rx="12" fill="#fcfcfb" stroke="#e2e0d9"/>
+<text x="24" y="34" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="600" text-anchor="start">Instructions per trace event</text>
+<text x="24" y="55" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" text-anchor="start">Trace point to return, steady state. clang 18 -O2, library defaults. Fewer is better.</text>
+<rect x="24" y="69" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="40" y="78" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" text-anchor="start">RV32 (rv32im_zce_zbb)</text>
+<rect x="201" y="69" width="10" height="10" rx="2" fill="#eb6834"/>
+<text x="217" y="78" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" text-anchor="start">Cortex-M4F</text>
+<line x1="210.0" y1="86" x2="210.0" y2="362" stroke="#e6e4de"/>
+<text x="210.0" y="378" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">0</text>
+<line x1="313.3" y1="86" x2="313.3" y2="362" stroke="#e6e4de"/>
+<text x="313.3" y="378" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">50</text>
+<line x1="416.7" y1="86" x2="416.7" y2="362" stroke="#e6e4de"/>
+<text x="416.7" y="378" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">100</text>
+<line x1="520.0" y1="86" x2="520.0" y2="362" stroke="#e6e4de"/>
+<text x="520.0" y="378" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">150</text>
+<line x1="623.3" y1="86" x2="623.3" y2="362" stroke="#e6e4de"/>
+<text x="623.3" y="378" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">200</text>
+<line x1="726.7" y1="86" x2="726.7" y2="362" stroke="#e6e4de"/>
+<text x="726.7" y="378" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">250</text>
+<line x1="830.0" y1="86" x2="830.0" y2="362" stroke="#e6e4de"/>
+<text x="830.0" y="378" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">300</text>
+<text x="198" y="104" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">EXTRACE_MARK</text>
+<text x="198" y="118" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">2-byte record</text>
+<path d="M210,92 H321.73333333333335 Q325.73333333333335,92 325.73333333333335,96 V99 Q325.73333333333335,103 321.73333333333335,103 H210 Z" fill="#2a78d6"/>
+<text x="331.7" y="101.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">56</text>
+<path d="M210,105 H338.26666666666665 Q342.26666666666665,105 342.26666666666665,109 V112 Q342.26666666666665,116 338.26666666666665,116 H210 Z" fill="#eb6834"/>
+<text x="348.3" y="114.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">64</text>
+<text x="198" y="144" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">EXTRACE (NONE)</text>
+<text x="198" y="158" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">3-byte record</text>
+<path d="M210,132 H358.93333333333334 Q362.93333333333334,132 362.93333333333334,136 V139 Q362.93333333333334,143 358.93333333333334,143 H210 Z" fill="#2a78d6"/>
+<text x="368.9" y="141.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">74</text>
+<path d="M210,145 H373.4 Q377.4,145 377.4,149 V152 Q377.4,156 373.4,156 H210 Z" fill="#eb6834"/>
+<text x="383.4" y="154.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">81</text>
+<text x="198" y="184" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">EXTRACE_INTS, 1 arg</text>
+<text x="198" y="198" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">6-byte record</text>
+<path d="M210,172 H429.2 Q433.2,172 433.2,176 V179 Q433.2,183 429.2,183 H210 Z" fill="#2a78d6"/>
+<text x="439.2" y="181.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">108</text>
+<path d="M210,185 H449.8666666666667 Q453.8666666666667,185 453.8666666666667,189 V192 Q453.8666666666667,196 449.8666666666667,196 H210 Z" fill="#eb6834"/>
+<text x="459.9" y="194.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">118</text>
+<text x="198" y="224" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">ftrace MARK</text>
+<text x="198" y="238" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">3-byte record</text>
+<path d="M210,212 H392.0 Q396.0,212 396.0,216 V219 Q396.0,223 392.0,223 H210 Z" fill="#2a78d6"/>
+<text x="402.0" y="221.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">90</text>
+<path d="M210,225 H373.4 Q377.4,225 377.4,229 V232 Q377.4,236 373.4,236 H210 Z" fill="#eb6834"/>
+<text x="383.4" y="234.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">81</text>
+<text x="198" y="264" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">ftrace NONE</text>
+<text x="198" y="278" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">4-byte record</text>
+<path d="M210,252 H431.26666666666665 Q435.26666666666665,252 435.26666666666665,256 V259 Q435.26666666666665,263 431.26666666666665,263 H210 Z" fill="#2a78d6"/>
+<text x="441.3" y="261.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">109</text>
+<path d="M210,265 H408.5333333333333 Q412.5333333333333,265 412.5333333333333,269 V272 Q412.5333333333333,276 408.5333333333333,276 H210 Z" fill="#eb6834"/>
+<text x="418.5" y="274.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">98</text>
+<text x="198" y="304" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">ftrace ARGS(1)</text>
+<text x="198" y="318" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">7-byte record</text>
+<path d="M210,292 H578.0 Q582.0,292 582.0,296 V299 Q582.0,303 578.0,303 H210 Z" fill="#2a78d6"/>
+<text x="588.0" y="301.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">180</text>
+<path d="M210,305 H594.5333333333333 Q598.5333333333333,305 598.5333333333333,309 V312 Q598.5333333333333,316 594.5333333333333,316 H210 Z" fill="#eb6834"/>
+<text x="604.5" y="314.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">188</text>
+<text x="198" y="344" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">ftrace ARGS(4)</text>
+<text x="198" y="358" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">17-byte record</text>
+<path d="M210,332 H792.9333333333333 Q796.9333333333333,332 796.9333333333333,336 V339 Q796.9333333333333,343 792.9333333333333,343 H210 Z" fill="#2a78d6"/>
+<text x="802.9" y="341.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">284</text>
+<path d="M210,345 H774.3333333333334 Q778.3333333333334,345 778.3333333333334,349 V352 Q778.3333333333334,356 774.3333333333334,356 H210 Z" fill="#eb6834"/>
+<text x="784.3" y="354.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">275</text>
+<line x1="210" y1="86" x2="210" y2="362" stroke="#74736d"/>
+</svg>

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="366" viewBox="0 0 880 366" role="img" aria-label="The cost of recording the caller">
+<title>The cost of recording the caller</title>
+<rect x="0.5" y="0.5" width="879" height="365" rx="12" fill="#fcfcfb" stroke="#e2e0d9"/>
+<text x="24" y="34" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="600" text-anchor="start">The cost of recording the caller</text>
+<text x="24" y="55" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" text-anchor="start">ftrace flavors without and with CALLER, EXTRACE_CFG_FTRACE_CALLER=1 build, clang 18 -O2.</text>
+<rect x="24" y="69" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="40" y="78" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" text-anchor="start">RV32 (rv32im_zce_zbb)</text>
+<rect x="201" y="69" width="10" height="10" rx="2" fill="#eb6834"/>
+<text x="217" y="78" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" text-anchor="start">Cortex-M4F</text>
+<line x1="210.0" y1="86" x2="210.0" y2="322" stroke="#e6e4de"/>
+<text x="210.0" y="338" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">0</text>
+<line x1="334.0" y1="86" x2="334.0" y2="322" stroke="#e6e4de"/>
+<text x="334.0" y="338" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">50</text>
+<line x1="458.0" y1="86" x2="458.0" y2="322" stroke="#e6e4de"/>
+<text x="458.0" y="338" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">100</text>
+<line x1="582.0" y1="86" x2="582.0" y2="322" stroke="#e6e4de"/>
+<text x="582.0" y="338" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">150</text>
+<line x1="706.0" y1="86" x2="706.0" y2="322" stroke="#e6e4de"/>
+<text x="706.0" y="338" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">200</text>
+<line x1="830.0" y1="86" x2="830.0" y2="322" stroke="#e6e4de"/>
+<text x="830.0" y="338" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="middle">250</text>
+<text x="198" y="104" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">MARK</text>
+<text x="198" y="118" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">3-byte record</text>
+<path d="M210,92 H429.2 Q433.2,92 433.2,96 V99 Q433.2,103 429.2,103 H210 Z" fill="#2a78d6"/>
+<text x="439.2" y="101.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">90</text>
+<path d="M210,105 H406.88 Q410.88,105 410.88,109 V112 Q410.88,116 406.88,116 H210 Z" fill="#eb6834"/>
+<text x="416.9" y="114.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">81</text>
+<text x="198" y="144" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">MARK | CALLER</text>
+<text x="198" y="158" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">5-byte record</text>
+<path d="M210,132 H478.8 Q482.8,132 482.8,136 V139 Q482.8,143 478.8,143 H210 Z" fill="#2a78d6"/>
+<text x="488.8" y="141.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">110</text>
+<path d="M210,145 H456.48 Q460.48,145 460.48,149 V152 Q460.48,156 456.48,156 H210 Z" fill="#eb6834"/>
+<text x="466.5" y="154.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">101</text>
+<text x="198" y="184" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">NONE</text>
+<text x="198" y="198" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">4-byte record</text>
+<path d="M210,172 H476.32 Q480.32,172 480.32,176 V179 Q480.32,183 476.32,183 H210 Z" fill="#2a78d6"/>
+<text x="486.3" y="181.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">109</text>
+<path d="M210,185 H449.03999999999996 Q453.03999999999996,185 453.03999999999996,189 V192 Q453.03999999999996,196 449.03999999999996,196 H210 Z" fill="#eb6834"/>
+<text x="459.0" y="194.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">98</text>
+<text x="198" y="224" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">NONE | CALLER</text>
+<text x="198" y="238" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">6-byte record</text>
+<path d="M210,212 H525.9200000000001 Q529.9200000000001,212 529.9200000000001,216 V219 Q529.9200000000001,223 525.9200000000001,223 H210 Z" fill="#2a78d6"/>
+<text x="535.9" y="221.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">129</text>
+<path d="M210,225 H518.48 Q522.48,225 522.48,229 V232 Q522.48,236 518.48,236 H210 Z" fill="#eb6834"/>
+<text x="528.5" y="234.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">126</text>
+<text x="198" y="264" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">ARGS(1)</text>
+<text x="198" y="278" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">7-byte record</text>
+<path d="M210,252 H652.4 Q656.4,252 656.4,256 V259 Q656.4,263 652.4,263 H210 Z" fill="#2a78d6"/>
+<text x="662.4" y="261.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">180</text>
+<path d="M210,265 H672.24 Q676.24,265 676.24,269 V272 Q676.24,276 672.24,276 H210 Z" fill="#eb6834"/>
+<text x="682.2" y="274.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">188</text>
+<text x="198" y="304" fill="#0b0b0b" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" text-anchor="end">ARGS(1) | CALLER</text>
+<text x="198" y="318" fill="#74736d" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="end">9-byte record</text>
+<path d="M210,292 H702.0 Q706.0,292 706.0,296 V299 Q706.0,303 702.0,303 H210 Z" fill="#2a78d6"/>
+<text x="712.0" y="301.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">200</text>
+<path d="M210,305 H754.08 Q758.08,305 758.08,309 V312 Q758.08,316 754.08,316 H210 Z" fill="#eb6834"/>
+<text x="764.1" y="314.5" fill="#52514e" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="400" text-anchor="start">221</text>
+<line x1="210" y1="86" x2="210" y2="322" stroke="#74736d"/>
+</svg>

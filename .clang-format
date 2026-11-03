@@ -1,0 +1,16 @@
+# Linux kernel style with 4-space indentation (DESIGN §19.3)
+BasedOnStyle: LLVM
+IndentWidth: 4
+ContinuationIndentWidth: 4
+UseTab: Never
+ColumnLimit: 100
+BreakBeforeBraces: Linux
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortBlocksOnASingleLine: Never
+IndentCaseLabels: false
+PointerAlignment: Right
+SortIncludes: Never
+AlignConsecutiveMacros: false
+SpaceAfterCStyleCast: false

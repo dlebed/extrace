@@ -1,0 +1,26 @@
+/* SPDX-License-Identifier: MIT */
+/* extrace_events.def: event catalog of the test images */
+
+/*            group     compiled-in */
+EXTRACE_GROUP(CORE,     1)
+EXTRACE_GROUP(LOG,      1)
+EXTRACE_GROUP(DEBUG,    0)  /* removed at compile time */
+EXTRACE_GROUP(FORCED,   0)  /* turned on by -DEXTRACE_GRP_FORCED_ON=1 */
+
+/*         name        kind     default  group   spec */
+EXTRACE_EV(T_MARK,     MARK,    ON,      CORE,   "")
+EXTRACE_EV(T_NONE,     NONE,    ON,      CORE,   "")
+EXTRACE_EV(T_INTS,     INTS,    ON,      CORE,   "a:u b:s")
+EXTRACE_EV(T_PRINTF,   PRINTF,  ON,      LOG,    "")
+EXTRACE_EV(T_BUF,      BUF,     ON,      CORE,   "")
+EXTRACE_EV(T_STR,      STR,     ON,      LOG,    "")
+EXTRACE_EV(T_ANY,      ANY,     ON,      CORE,   "")
+EXTRACE_EV(T_OFF,      INTS,    OFF,     CORE,   "")
+EXTRACE_EV(T_DEBUG,    INTS,    ON,      DEBUG,  "")
+EXTRACE_EV(T_FORCED,   NONE,    ON,      FORCED, "")
+EXTRACE_EV(T_SEQ,      INTS,    ON,      CORE,   "seq:u ctx:u")
+EXTRACE_EV(T_ISR,      INTS,    ON,      CORE,   "seq:u")
+EXTRACE_EV(T_OPT,      INTS,    OFF,     CORE,   "")     /* default off, the consumer may enable it */
+
+/*                name       default  group  C type */
+EXTRACE_EV_STRUCT(T_STRUCT,  ON,      CORE,  struct test_struct)

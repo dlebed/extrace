@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="150" viewBox="0 0 880 150" role="img" aria-label="Example FTRACE record with caller, 9 bytes">
+<title>Example FTRACE record with caller, 9 bytes</title>
+<rect x="0.5" y="0.5" width="879" height="149" rx="12" fill="#1a1a19" stroke="#2f2f2c"/>
+<text x="24" y="34" fill="#f0efec" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="600" text-anchor="start">FTRACE ARGS(1) with caller: 9 bytes</text>
+<rect x="24" y="52" width="46" height="40" rx="6" fill="#232321"/>
+<text x="47.0" y="77" fill="#f0efec" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="500" text-anchor="middle">42</text>
+<text x="47.0" y="110" fill="#9a998f" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" text-anchor="middle">hdr</text>
+<rect x="74" y="52" width="46" height="40" rx="6" fill="#232321"/>
+<text x="97.0" y="77" fill="#f0efec" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="500" text-anchor="middle">19</text>
+<text x="97.0" y="110" fill="#9a998f" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" text-anchor="middle">tsd</text>
+<rect x="124" y="52" width="46" height="40" rx="6" fill="#232321"/>
+<text x="147.0" y="77" fill="#f0efec" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="500" text-anchor="middle">06</text>
+<text x="147.0" y="110" fill="#9a998f" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" text-anchor="middle">len</text>
+<rect x="174" y="52" width="46" height="40" rx="6" fill="#232321"/>
+<text x="197.0" y="77" fill="#f0efec" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="500" text-anchor="middle">00</text>
+<text x="197.0" y="110" fill="#9a998f" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" text-anchor="middle">sign</text>
+<rect x="224" y="52" width="76" height="40" rx="6" fill="#3987e5"/>
+<text x="262.0" y="77" fill="#ffffff" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="500" text-anchor="middle">C7 34</text>
+<text x="262.0" y="110" fill="#9a998f" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" text-anchor="middle">addr</text>
+<rect x="304" y="52" width="76" height="40" rx="6" fill="#3987e5"/>
+<text x="342.0" y="77" fill="#ffffff" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="500" text-anchor="middle">93 18</text>
+<text x="342.0" y="110" fill="#9a998f" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" text-anchor="middle">caller</text>
+<rect x="384" y="52" width="46" height="40" rx="6" fill="#232321"/>
+<text x="407.0" y="77" fill="#f0efec" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="500" text-anchor="middle">07</text>
+<text x="407.0" y="110" fill="#9a998f" font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" text-anchor="middle">a0</text>
+<text x="24" y="136" fill="#9a998f" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" text-anchor="start">Varint header, timestamp delta, then the payload. addr is the return address minus ftrace_base, carried once in the stream&#x27;s INFO record.</text>
+</svg>
